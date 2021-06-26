@@ -16,12 +16,12 @@
         <Border BorderThickness="1" BorderBrush="LightBlue" Grid.Column="0" Margin="5">
 
             <Canvas x:Name="servosView">
-                <servo:ServoView x:Name="servo1" ServoId="1" Width="106" Height="78" Canvas.Top="531" Loaded="servo1_Loaded"/>
-                <servo:ServoView x:Name="servo2" ServoId="2" Width="106" Height="78" Canvas.Left="106" Canvas.Top="334"/>
-                <servo:ServoView x:Name="servo3" ServoId="3" Width="106" Height="78" Canvas.Left="69" Canvas.Top="75" Loaded="servo3_Loaded"/>
-                <servo:ServoView x:Name="servo4" ServoId="4" Width="106" Height="78" Canvas.Left="302" Canvas.Top="453"/>
-                <servo:ServoView x:Name="servo5" ServoId="5" Width="106" Height="78" Canvas.Left="34" Canvas.Top="211"/>
-                <servo:ServoView x:Name="servo6" ServoId="6" Width="106" Height="78" Canvas.Left="234" Canvas.Top="223" Loaded="servo6_Loaded"/>
+                <servo:ServoView x:Name="servo1" ServoId="1" Width="106" Height="78" Canvas.Left="49" Canvas.Top="428"/>
+                <servo:ServoView x:Name="servo2" ServoId="2" Width="106" Height="78" Canvas.Left="49" Canvas.Top="302"/>
+                <servo:ServoView x:Name="servo3" ServoId="3" Width="106" Height="78" Canvas.Left="49" Canvas.Top="176"/>
+                <servo:ServoView x:Name="servo4" ServoId="4" Width="106" Height="78" Canvas.Left="230" Canvas.Top="428"/>
+                <servo:ServoView x:Name="servo5" ServoId="5" Width="106" Height="78" Canvas.Left="230" Canvas.Top="302"/>
+                <servo:ServoView x:Name="servo6" ServoId="6" Width="106" Height="78" Canvas.Left="230" Canvas.Top="176"/>
             </Canvas>
         </Border>
         <Grid Grid.Column="1">

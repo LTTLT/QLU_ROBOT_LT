@@ -37,7 +37,7 @@ namespace RobotArm
         public const int CMD_ACTION_DOWNLOAD = 25;
 
         //舵机信息
-        public const int SERVO_NUM = 6; //需要修改
+        public const int SERVO_NUM = 6;
 
         
         public const int MAX_ARGS_LENTH = 35;//最大的命令长度
@@ -839,19 +839,5 @@ namespace RobotArm
             }
         }
 
-        private void servo1_Loaded(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void servo6_Loaded(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void servo3_Loaded(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }
