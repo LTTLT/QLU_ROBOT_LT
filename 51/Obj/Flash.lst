@@ -1,0 +1,198 @@
+C51 COMPILER V9.02   FLASH                                                                 07/22/2021 04:22:25 PAGE 1   
+
+
+C51 COMPILER V9.02, COMPILATION OF MODULE FLASH
+OBJECT MODULE PLACED IN .\Obj\Flash.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE Flash.c LARGE OMF2 ROM(COMPACT) BROWSE DEBUG PRINT(.\Obj\Flash.lst) OBJECT(
+                    -.\Obj\Flash.obj)
+
+line level    source
+
+   1          #include "include.h"
+   2          
+   3          
+   4          
+   5          /************************************************
+   6          SPI初始化
+   7          入口参数: 无
+   8          出口参数: 无
+   9          ************************************************/
+  10          void InitSpi()
+  11          {
+  12   1              ACC = P_SW1;                                //切换到第一组SPI
+  13   1              ACC &= ~(SPI_S0 | SPI_S1);                  //SPI_S0=0 SPI_S1=0
+  14   1              P_SW1 = ACC;                                //(P1.2/SS, P1.3/MOSI, P1.4/MISO, P1.5/SCLK)
+  15   1      
+  16   1              SPSTAT = SPIF | WCOL;                       //清除SPI状态
+  17   1              SS = 1;
+  18   1              SPCTL = SSIG | SPEN | MSTR;                 //设置SPI为主模式
+  19   1      }
+  20          
+  21          
+  22          void InitFlash()
+  23          {
+  24   1              InitSpi();
+  25   1      }
+  26          
+  27          /************************************************
+  28          使用SPI方式与Flash进行数据交换
+  29          入口参数:
+  30              dat : 准备写入的数据
+  31          出口参数:
+  32              从Flash中读出的数据
+  33          ************************************************/
+  34          BYTE SpiShift(BYTE dat)
+  35          {
+  36   1          SPDAT = dat;                                //触发SPI发送
+  37   1          while (!(SPSTAT & SPIF));                   //等待SPI数据传输完成
+  38   1          SPSTAT = SPIF | WCOL;                       //清除SPI状态
+  39   1          
+  40   1          return SPDAT;
+  41   1      }
+  42          
+  43          
+  44          
+  45          /************************************************
+  46          检测Flash的忙状态
+  47          入口参数: 无
+  48          出口参数:
+  49              0 : Flash处于空闲状态
+  50              1 : Flash处于忙状态
+  51          ************************************************/
+  52          BOOL IsFlashBusy()
+  53          {
+  54   1          BYTE dat;
+C51 COMPILER V9.02   FLASH                                                                 07/22/2021 04:22:25 PAGE 2   
+
+  55   1          
+  56   1          SS = 0;
+  57   1          SpiShift(SFC_RDSR);                         //发送读取状态命令
+  58   1          dat = SpiShift(0);                          //读取状态
+  59   1          SS = 1;
+  60   1          
+  61   1          return (dat & 0x01);                        //状态值的Bit0即为忙标志
+  62   1      }
+  63          
+  64          /************************************************
+  65          使能Flash写命令
+  66          入口参数: 无
+  67          出口参数: 无
+  68          ************************************************/
+  69          void FlashWriteEnable()
+  70          {
+  71   1          while (IsFlashBusy());                      //Flash忙检测
+  72   1          SS = 0;
+  73   1          SpiShift(SFC_WREN);                         //发送写使能命令
+  74   1          SS = 1;
+  75   1      }
+  76          
+  77          /************************************************
+  78          擦除整片Flash
+  79          入口参数: 无
+  80          出口参数: 无
+  81          ************************************************/
+  82          void FlashErase()
+  83          {
+  84   1          FlashWriteEnable();                     //使能Flash写命令
+  85   1          SS = 0;
+  86   1          SpiShift(SFC_CHIPER);                   //发送片擦除命令
+  87   1          SS = 1;
+  88   1      }
+  89          
+  90          /************************************************
+  91          擦除扇区 扇区大小4096,Flash最小擦除大小是以扇区为单位擦除
+  92          入口参数: 
+  93                          addr
+  94          出口参数: 无
+  95          ************************************************/
+  96          void FlashEraseSector(DWORD addr)
+  97          {
+  98   1          FlashWriteEnable();                     //使能Flash写命令
+  99   1          SS = 0;
+ 100   1          SpiShift(SFC_SECTOR_ERASE);                   //发送扇区擦除命令
+ 101   1              SpiShift((BYTE)(addr>>16));
+ 102   1              SpiShift((BYTE)(addr>>8));
+ 103   1              SpiShift((BYTE)addr);
+ 104   1          SS = 1;
+ 105   1      }
+ 106          
+ 107          /************************************************
+ 108          从Flash中读取数据
+ 109          入口参数:
+ 110              addr   : 地址参数
+ 111              size   : 数据块大小
+ 112              buffer : 缓冲从Flash中读取的数据
+ 113          出口参数:
+ 114              无
+ 115          ************************************************/
+ 116          void FlashRead(DWORD addr, DWORD size, BYTE *buffer)
+C51 COMPILER V9.02   FLASH                                                                 07/22/2021 04:22:25 PAGE 3   
+
+ 117          {
+ 118   1          while (IsFlashBusy());                  //Flash忙检测
+ 119   1          SS = 0;
+ 120   1          SpiShift(SFC_FASTREAD);                 //使用快速读取命令
+ 121   1          SpiShift(((BYTE *)&addr)[1]);           //设置起始地址
+ 122   1          SpiShift(((BYTE *)&addr)[2]);
+ 123   1          SpiShift(((BYTE *)&addr)[3]);
+ 124   1          SpiShift(0);                            //需要空读一个字节
+ 125   1          while (size)
+ 126   1          {
+ 127   2              *buffer = SpiShift(0);              //自动连续读取并保存
+ 128   2              addr++;
+ 129   2              buffer++;
+ 130   2              size--;
+ 131   2          }
+ 132   1          SS = 1;
+ 133   1      }
+ 134          
+ 135          /************************************************
+ 136          写数据到Flash中
+ 137          入口参数:
+ 138              addr   : 地址参数
+ 139              size   : 数据块大小
+ 140              buffer : 缓冲需要写入Flash的数据
+ 141          出口参数: 无
+ 142          ************************************************/
+ 143          void FlashWrite(DWORD addr, DWORD size, BYTE *buffer)
+ 144          {
+ 145   1          while (size)
+ 146   1          {
+ 147   2              FlashWriteEnable();                     //使能Flash写命令
+ 148   2              SS = 0;
+ 149   2              SpiShift(SFC_PAGEPROG);                 //发送页编程命令
+ 150   2              SpiShift(((BYTE *)&addr)[1]);           //设置起始地址
+ 151   2              SpiShift(((BYTE *)&addr)[2]);
+ 152   2              SpiShift(((BYTE *)&addr)[3]);
+ 153   2              while (size)
+ 154   2              {
+ 155   3                  SpiShift(*buffer);                  //连续页内写
+ 156   3                  addr++;
+ 157   3                  buffer++;
+ 158   3                  size--;
+ 159   3                  if ((addr & 0xff) == 0) break;
+ 160   3              }
+ 161   2              SS = 1;
+ 162   2          }
+ 163   1      }
+ 164          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    495    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      26
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+C51 COMPILER V9.02   FLASH                                                                 07/22/2021 04:22:25 PAGE 4   
+
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

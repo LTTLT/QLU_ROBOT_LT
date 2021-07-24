@@ -1,0 +1,129 @@
+C51 COMPILER V9.02   BUSSERVOCTRL                                                          07/22/2021 04:22:27 PAGE 1   
+
+
+C51 COMPILER V9.02, COMPILATION OF MODULE BUSSERVOCTRL
+OBJECT MODULE PLACED IN .\Obj\BusServoCtrl.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE BusServoCtrl.c LARGE OMF2 ROM(COMPACT) BROWSE DEBUG PRINT(.\Obj\BusServoCtr
+                    -l.lst) OBJECT(.\Obj\BusServoCtrl.obj)
+
+line level    source
+
+   1          #include "include.h"
+   2          
+   3          static bool UartBusy = FALSE;
+   4          
+   5          void InitUart4(void)
+   6          {
+   7   1              S4CON = 0x10;           //8位数据,可变波特率
+   8   1              S4CON |= 0x40;          //串口4选择定时器4为波特率发生器
+   9   1              T4T3M |= 0x20;          //定时器4时钟为Fosc,即1T
+  10   1              T4L = (65536 - (FOSC/4/UART4_BAUD));   //设置波特率重装值
+  11   1          T4H = (65536 - (FOSC/4/UART4_BAUD))>>8;
+  12   1              T4T3M |= 0x80;          //启动定时器4
+  13   1              IE2 |= 0x10;                 //使能串口4中断
+  14   1      }
+  15          
+  16          
+  17          void InitBusServoCtrl(void)
+  18          {
+  19   1              InitUart4();//串口2初始化
+  20   1              UART_TX_ENABLE();
+  21   1      }
+  22          
+  23          /***********************************************************
+  24          * 名    称： bool Uart4SendData(UINT8 dat)
+  25          * 功    能： 
+  26          * 入口参数：  
+  27          * 出口参数：
+  28          * 说    明：                                     
+  29          /**********************************************************/ 
+  30          void Uart4SendData(UINT8 dat)
+  31          {
+  32   1          S4BUF = dat;                                //Send data to UART buffer
+  33   1              UartBusy = TRUE;
+  34   1              while (UartBusy);
+  35   1      }
+  36          
+  37          void Uart4SendDataPacket(UINT8 dat[],uint8 len)
+  38          {
+  39   1              uint8 i;
+  40   1              for(i = 0;i < len;i++)
+  41   1              {
+  42   2                      Uart4SendData(dat[i]);
+  43   2              }
+  44   1      }
+  45          /***********************************************************
+  46          * 名    称： void Uart4() interrupt 18 using 1
+  47          * 功    能： 
+  48          * 入口参数：  
+  49          * 出口参数：
+  50          * 说    明：                                     
+  51          /**********************************************************/ 
+  52          void Uart4() interrupt 18 using 1
+  53          {
+  54   1              uint8 rxBuf;
+C51 COMPILER V9.02   BUSSERVOCTRL                                                          07/22/2021 04:22:27 PAGE 2   
+
+  55   1              
+  56   1          if (S4CON & S4RI)
+  57   1          {
+  58   2              S4CON &= ~S4RI;     //Clear receive interrupt flag
+  59   2                      rxBuf = S4BUF; 
+  60   2      
+  61   2          }
+  62   1          if (S4CON & S4TI)
+  63   1          {
+  64   2              S4CON &= ~S4TI;     //Clear transmit interrupt flag
+  65   2              UartBusy = FALSE;           //Clear transmit busy flag
+  66   2          }
+  67   1      }
+  68          void BusServoCtrl(uint8 id,uint8 cmd,uint16 prm1,uint16 prm2)
+  69          {
+  70   1              uint32 i;
+  71   1              uint8 tx[20];
+  72   1              uint8 datalLen = 4;
+  73   1              uint32 checkSum = 0;
+  74   1      
+  75   1              switch(cmd)
+  76   1              {
+  77   2              case SERVO_MOVE_TIME_WRITE:
+  78   2                      datalLen = SERVO_MOVE_TIME_DATA_LEN;
+  79   2                      break;
+  80   2                      
+  81   2              
+  82   2              }
+  83   1              tx[0] = 0x55;
+  84   1              tx[1] = 0x55;
+  85   1              tx[2] = id;
+  86   1              tx[3] = datalLen;
+  87   1              tx[4] = cmd;
+  88   1              tx[5] = prm1;
+  89   1              tx[6] = prm1 >> 8;
+  90   1              tx[7] = prm2;
+  91   1              tx[8] = prm2 >> 8;
+  92   1              for(i = 2; i <= datalLen + 1; i++)
+  93   1              {
+  94   2                      checkSum += tx[i];
+  95   2              }
+  96   1              tx[datalLen + 2] = ~checkSum;
+  97   1              UART_TX_ENABLE();
+  98   1              Uart4SendDataPacket(tx,datalLen + 3);
+  99   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    381    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----      39
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

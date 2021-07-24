@@ -1,0 +1,184 @@
+C51 COMPILER V9.02   ROBOTRUN                                                              07/22/2021 22:22:02 PAGE 1   
+
+
+C51 COMPILER V9.02, COMPILATION OF MODULE ROBOTRUN
+OBJECT MODULE PLACED IN .\Obj\RobotRun.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE RobotRun.c LARGE OMF2 ROM(COMPACT) BROWSE DEBUG PRINT(.\Obj\RobotRun.lst) O
+                    -BJECT(.\Obj\RobotRun.obj)
+
+line level    source
+
+   1          #include "include.h"
+   2          
+   3          bool fRobotRun = FALSE;//总运行标志位
+   4          uint8 ActFullNum = 0;//动作组编号
+   5          uint32 ActFullRunTimesSum = 1;//该值为0代表无限次
+   6          
+   7          uint32 ActFullRunTimes = 0;//当前已经运行的次数
+   8          
+   9          uint32 TimeActionRunTotal = 0;//运行时间总计
+  10          bool fFrameRunFinish = TRUE;//每帧运行完毕标志位
+  11          
+  12          uint8 FrameIndexSum = 0;//一个动作组里面总共有多少动作
+  13          uint8 FrameIndex = 0;//动作组里面某一动作的编号，从0开始
+  14          
+  15          
+  16          void FullActRun(uint8 actFullnum,uint32 times)//初始化并运行新的动作
+  17          {
+  18   1              uint8 frameIndexSum;
+  19   1              FlashRead(MEM_FRAME_INDEX_SUM_BASE + actFullnum,1, &frameIndexSum);
+  20   1              if(frameIndexSum > 0)//该动作组的动作数大于0，说明是有效的，已经下载过动作了。
+  21   1              {
+  22   2                      FrameIndexSum = frameIndexSum;
+  23   2                      if(ActFullNum != actFullnum)
+  24   2                      {
+  25   3                              if(actFullnum == 0)
+  26   3                              {//0号动作组强制运行，可以中断当前正在运行的其他动作组
+  27   4                                      fRobotRun = FALSE;
+  28   4                                      ActFullRunTimes = 0;
+  29   4                                      fFrameRunFinish = TRUE;
+  30   4                              }
+  31   3                      }
+  32   2                      else
+  33   2                      {       //只用前后两次动作组编号相同才能修改次数
+  34   3                              ActFullRunTimesSum = times;
+  35   3                      }
+  36   2                      
+  37   2                      
+  38   2                      if(FALSE == fRobotRun)
+  39   2                      {
+  40   3                              ActFullNum = actFullnum;
+  41   3                              ActFullRunTimesSum = times;
+  42   3                              FrameIndex = 0;
+  43   3                              ActFullRunTimes = 0;
+  44   3                              fRobotRun = TRUE;                       
+  45   3                              TimeActionRunTotal = gSystemTickCount;
+  46   3                      }
+  47   2                      
+  48   2              }
+  49   1              
+  50   1      
+  51   1      }
+  52          void FullActStop(void)
+  53          {
+  54   1              fRobotRun = FALSE;
+C51 COMPILER V9.02   ROBOTRUN                                                              07/22/2021 22:22:02 PAGE 2   
+
+  55   1              ActFullRunTimes = 0;
+  56   1      
+  57   1              fFrameRunFinish = TRUE;
+  58   1      
+  59   1              FrameIndex = 0;
+  60   1      }
+  61          
+  62          
+  63          
+  64          uint16 ActSubFrameRun(uint8 fullActNum,uint8 frameIndex)
+  65          {
+  66   1              uint32 i = 0;
+  67   1      
+  68   1      //      uint16 frameSumSum = 0; //由于子动作都是连续存放的，子动作的帧数又是不确定的数
+  69   1              //，所以要总在一起算。所有前面子动作的帧加起来
+  70   1              uint8 frame[ACT_SUB_FRAME_SIZE];
+  71   1              uint8 servoCount;
+  72   1              uint32 time;
+  73   1              uint8 id;
+  74   1              uint16 pos;
+  75   1      
+  76   1              FlashRead((MEM_ACT_FULL_BASE) + (fullActNum * ACT_FULL_SIZE) + (frameIndex * ACT_SUB_FRAME_SIZE)
+  77   1                      ,ACT_SUB_FRAME_SIZE,frame);
+  78   1              
+  79   1              servoCount = frame[0];
+  80   1              time = frame[1] + (frame[2]<<8);
+  81   1      
+  82   1              if(servoCount > 17)
+  83   1              {//舵机数超过8个，说明下载了错误动作
+  84   2                      FullActStop();
+  85   2                      return 0;
+  86   2              }
+  87   1              for(i = 0; i < servoCount; i++)
+  88   1              {
+  89   2                      id =  frame[3 + i * 3];
+  90   2                      pos = frame[4 + i * 3] + (frame[5 + i * 3]<<8);
+  91   2                      ServoSetPluseAndTime(id,pos,time);
+  92   2                      BusServoCtrl(id,SERVO_MOVE_TIME_WRITE,pos,time);
+  93   2              }
+  94   1              return time;
+  95   1      }
+  96          
+  97          
+  98          void TaskRobotRun(void)
+  99          {
+ 100   1      
+ 101   1              if(fRobotRun)
+ 102   1              {
+ 103   2                      if(TRUE == fFrameRunFinish)
+ 104   2                      {//运行完成后开始下一帧动作运行
+ 105   3                              fFrameRunFinish = FALSE;
+ 106   3                              TimeActionRunTotal += ActSubFrameRun(ActFullNum,FrameIndex);//将这帧动作的时间累加上
+ 107   3                      }
+ 108   2                      else
+ 109   2                      {
+ 110   3                              if(gSystemTickCount >= TimeActionRunTotal)
+ 111   3                              {//不断检测这帧动作在指定时间内运行完成
+ 112   4                                      fFrameRunFinish = TRUE;
+ 113   4                                      if(++FrameIndex >= FrameIndexSum)
+ 114   4                                      {//已运行完该动作组最后一个动作
+ 115   5                                              FrameIndex = 0;
+ 116   5                                              if(ActFullRunTimesSum != 0)
+C51 COMPILER V9.02   ROBOTRUN                                                              07/22/2021 22:22:02 PAGE 3   
+
+ 117   5                                              {//如果运行次数等于0，即代表无限次运行，就不进入if语句，就一直运行了
+ 118   6                                                      if(++ActFullRunTimes >= ActFullRunTimesSum)
+ 119   6                                                      {//到达运行次数，运行停止
+ 120   7                                                              fRobotRun = FALSE;
+ 121   7                                                      
+ 122   7                                                      }
+ 123   6                                              }
+ 124   5                                      }
+ 125   4                              }
+ 126   3                      }
+ 127   2              }
+ 128   1              else
+ 129   1              {
+ 130   2                      FrameIndex = 0;
+ 131   2                      
+ 132   2                      ActFullRunTimes = 0;
+ 133   2      
+ 134   2                      fFrameRunFinish = TRUE;
+ 135   2      
+ 136   2                      TimeActionRunTotal = gSystemTickCount;
+ 137   2                      //只需要在运行完整动作组的最开始赋一下初值就可以，避免累积误差
+ 138   2              }
+ 139   1      }
+ 140          void clear(void)
+ 141          {
+ 142   1                              FrameIndex = 0;
+ 143   1                      
+ 144   1                      ActFullRunTimes = 0;
+ 145   1      
+ 146   1                      fFrameRunFinish = TRUE;
+ 147   1      
+ 148   1                      TimeActionRunTotal = gSystemTickCount;
+ 149   1      
+ 150   1      }
+ 151          
+ 152          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    871    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     15      83
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

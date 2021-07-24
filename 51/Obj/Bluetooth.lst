@@ -1,0 +1,205 @@
+C51 COMPILER V9.02   BLUETOOTH                                                             07/22/2021 04:22:25 PAGE 1   
+
+
+C51 COMPILER V9.02, COMPILATION OF MODULE BLUETOOTH
+OBJECT MODULE PLACED IN .\Obj\Bluetooth.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE Bluetooth.c LARGE OMF2 ROM(COMPACT) BROWSE DEBUG PRINT(.\Obj\Bluetooth.lst)
+                    - OBJECT(.\Obj\Bluetooth.obj)
+
+line level    source
+
+   1          #include "include.h"
+   2          
+   3          
+   4          static bool Uart2Busy = FALSE;
+   5          unsigned char CMD_0[8]={0x50,0x03,0x00,0x34,0x00,0x01,0xc8,0x45};
+   6          static bool fUartRxComplete = FALSE;
+   7          static uint8 xdata UartRxBuffer[260];
+   8          
+   9          static bool UartBusy = FALSE;
+  10          uint8 distance1 = 0;
+  11          uint8 distance2 = 0;
+  12          
+  13          uint16 ModbusCRC(uint8 *ptr,uint16 ucLen) ;
+  14          
+  15          void InitUart2(void)
+  16          {
+  17   1              S2CON = 0x50;           //8位数据,可变波特率
+  18   1              AUXR |= 0x04;           //定时器2时钟为Fosc,即1T
+  19   1              T2L = 0xC7;             //设定定时初值  //9600bps@12.000MHz
+  20   1              T2H = 0xFE;             //设定定时初值
+  21   1              AUXR |= 0x10;           //启动定时器2
+  22   1              IE2 |= 0x01;                 //使能串口2中断
+  23   1      }
+  24          
+  25          
+  26          
+  27          /***********************************************************
+  28          * 名    称： bool Uart2SendData(UINT8 dat)
+  29          * 功    能： 
+  30          * 入口参数：  
+  31          * 出口参数：
+  32          * 说    明：                                     
+  33          /**********************************************************/ 
+  34          void Uart2SendData(UINT8 dat)
+  35          {
+  36   1          S2BUF = dat;                                //Send data to UART buffer
+  37   1              Uart2Busy = TRUE;
+  38   1              while (Uart2Busy);
+  39   1      }
+  40          
+  41          void Uart2SendDataPacket(UINT8 dat[],uint8 len)
+  42          {
+  43   1              uint8 i;
+  44   1              for(i = 0;i < len;i++)
+  45   1              {
+  46   2                      Uart2SendData(dat[i]);
+  47   2              }
+  48   1      }
+  49          
+  50          
+  51          
+  52           unsigned char ucRxFinish1=0;
+  53           static unsigned char ucCnt=0,ucLen=0;
+  54           static unsigned char ucRxData[100];
+C51 COMPILER V9.02   BLUETOOTH                                                             07/22/2021 04:22:25 PAGE 2   
+
+  55          /***********************************************************
+  56          * 名    称： void Uart4() interrupt 18 using 1
+  57          * 功    能： 
+  58          * 入口参数：  
+  59          * 出口参数：
+  60          * 说    明：                                     
+  61          /**********************************************************/ 
+  62          void Uart2() interrupt 8 using 1
+  63          {
+  64   1              uint8 temp;
+  65   1               u16 C=0;
+  66   1      //      static uint8 messageLengthSum = 2;
+  67   1              
+  68   1              if (S2CON & S2RI)               //串口2收到数据请求中断
+  69   1          {
+  70   2              S2CON &= ~S2RI;     //Clear receive interrupt flag
+  71   2                      temp = S2BUF;           //赋值串口2数据
+  72   2                                      if(ucCnt==0)
+  73   2                                              ucRxData[ucCnt++]=temp ;//ucRxData[0]
+  74   2                        else  if((ucCnt==1)&(temp==0x03))//
+  75   2                                              ucRxData[ucCnt++]=temp;//ucRxData[1]
+  76   2                              else if(ucCnt==2)
+  77   2                                              {ucRxData[ucCnt++]=temp; ucLen=ucRxData[2];}//ucRxData[2]
+  78   2                              else if((ucCnt>2)&(ucCnt<=(ucLen+4)))
+  79   2                                              ucRxData[ucCnt++]=temp;//ucRxData[3]
+  80   2                              if(ucCnt==(ucLen+5))
+  81   2                              { 
+  82   3                                      C=ModbusCRC(ucRxData,ucLen+3);
+  83   3                                      
+  84   3                                      if(C==((ucRxData[ucLen+3]<<8)|ucRxData[ucLen+4]))//
+  85   3                                              {ucRxFinish1=1; ucCnt=0;ucLen=0;}                       
+  86   3                                      else 
+  87   3                                              {ucCnt=0;ucLen=0;}                              
+  88   3                              }
+  89   2          }
+  90   1      
+  91   1          if (S2CON & S2TI)
+  92   1          {
+  93   2              S2CON &= ~S2TI;     //Clear transmit interrupt flag
+  94   2              Uart2Busy = FALSE;           //Clear transmit busy flag
+  95   2          }
+  96   1      }
+  97          
+  98          
+  99          static bool UartRxOK(void)
+ 100          {
+ 101   1              if(fUartRxComplete)
+ 102   1              {
+ 103   2                      fUartRxComplete = FALSE;
+ 104   2                      return TRUE;
+ 105   2              }
+ 106   1              else
+ 107   1              {
+ 108   2                      return FALSE;
+ 109   2              }
+ 110   1      }
+ 111          void TaskBLEMsgHandle(void)
+ 112          {
+ 113   1              uint8 length;
+ 114   1              //McuToPCSendData(CMD_ACTION_DOWNLOAD,data1,data2);
+ 115   1              if(UartRxOK())
+ 116   1              {
+C51 COMPILER V9.02   BLUETOOTH                                                             07/22/2021 04:22:25 PAGE 3   
+
+ 117   2                      LED = !LED;
+ 118   2                      length = ((UartRxBuffer[1]<<8)|UartRxBuffer[2]);
+ 119   2                      }
+ 120   1      }
+ 121          
+ 122          uint16 ModbusCRC(uint8 *ptr,uint16 ucLen)//CRC校验
+ 123          {
+ 124   1              uint8 i;
+ 125   1              uint16 j,crc=0xffff;
+ 126   1              int32 n;
+ 127   1              int32 k;
+ 128   1              
+ 129   1              i=i;    
+ 130   1              
+ 131   1              for( n=0; n<ucLen;n++)
+ 132   1              {
+ 133   2                      crc=ptr[n]^crc;
+ 134   2                      for( k=0;k<8;k++)
+ 135   2                      if(crc&0x01)
+ 136   2                      {
+ 137   3                              crc=crc>>1;
+ 138   3                              crc=crc^0xa001;
+ 139   3                      }
+ 140   2                      else
+ 141   2                      {
+ 142   3                              crc=crc>>1;     
+ 143   3                      }               
+ 144   2              }
+ 145   1      
+ 146   1              j=crc>>8;
+ 147   1              j=j|(crc<<8);
+ 148   1              return j;
+ 149   1      
+ 150   1      }
+ 151          int16 getdata(void)
+ 152          {
+ 153   1              uint8 dat[7];
+ 154   1              unsigned int uiData;
+ 155   1              Uart2SendDataPacket(CMD_0,8);
+ 156   1              DelayMs(100);
+ 157   1              uiData=ucRxData[3]<<8|ucRxData[4];              
+ 158   1              ucRxFinish1=0;
+ 159   1              dat[0]=0x55;
+ 160   1              dat[1]=ucRxData[0];
+ 161   1              dat[2]=ucRxData[1];
+ 162   1              dat[3]=ucRxData[2];
+ 163   1              dat[4]=ucRxData[3];
+ 164   1              dat[5]=ucRxData[4];
+ 165   1              dat[6]=ucRxData[5];
+ 166   1              UART1SendDataPacket(dat,7);
+ 167   1          return uiData;      
+ 168   1      }
+ 169          
+ 170          
+ 171          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    796    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    373      31
+   PDATA SIZE       =   ----    ----
+C51 COMPILER V9.02   BLUETOOTH                                                             07/22/2021 04:22:25 PAGE 4   
+
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      3    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

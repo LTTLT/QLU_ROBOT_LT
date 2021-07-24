@@ -1,0 +1,267 @@
+C51 COMPILER V9.02   APP                                                                   07/22/2021 22:23:47 PAGE 1   
+
+
+C51 COMPILER V9.02, COMPILATION OF MODULE APP
+OBJECT MODULE PLACED IN .\Obj\App.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE App.c LARGE OMF2 ROM(COMPACT) BROWSE DEBUG PRINT(.\Obj\App.lst) OBJECT(.\Ob
+                    -j\App.obj)
+
+line level    source
+
+   1          #include "include.h"
+   2          
+   3          
+   4          #define ADC_POWER   0x80            //ADC电源控制位
+   5          #define ADC_FLAG    0x10            //ADC完成标志
+   6          #define ADC_START   0x08            //ADC起始控制位
+   7          #define ADC_SPEEDLL 0x00            //540个时钟
+   8          #define ADC_SPEEDL  0x20            //360个时钟
+   9          #define ADC_SPEEDH  0x40            //180个时钟
+  10          #define ADC_SPEEDHH 0x60            //90个时钟
+  11          
+  12          #define ADC_BAT         6               //电池电压的AD检测通道
+  13          static bool UartBusy = FALSE;
+  14          
+  15          u32 gSystemTickCount = 0;       //系统从启动到现在的毫秒数
+  16          
+  17          uint8 BuzzerState = 0;
+  18          uint8 Mode = 0;
+  19          uint16 xdata Ps2TimeCount = 0;
+  20          
+  21          uint16 xdata BatteryVoltage;
+  22          
+  23          void DelayMs(uint16 ms)
+  24          {
+  25   1              uint16 i,j;
+  26   1              for(i=0;i<800;i++)
+  27   1                      for(j=0;j<ms;j++);
+  28   1      }
+  29          
+  30          
+  31          void InitADC(void)
+  32          {
+  33   1          P1ASF = 0x40;                   //
+  34   1          ADC_RES = 0;                    //清除结果寄存器
+  35   1          ADC_CONTR = ADC_POWER | ADC_SPEEDLL;
+  36   1          //Delay(2);                       //ADC上电并延时
+  37   1      }
+  38          
+  39          
+  40          uint16 GetADCResult(BYTE ch)
+  41          {
+  42   1              uint16 ad;
+  43   1          ADC_CONTR = ADC_POWER | ADC_SPEEDLL | ch | ADC_START;
+  44   1          _nop_();                        //等待4个NOP
+  45   1          _nop_();
+  46   1          _nop_();
+  47   1          _nop_();
+  48   1          while (!(ADC_CONTR & ADC_FLAG));//等待ADC转换完成
+  49   1          ADC_CONTR &= ~ADC_FLAG;         //Close ADC
+  50   1          
+  51   1          ad = ADC_RES;
+  52   1              ad = (ad << 2) + (ADC_RESL & 0x03);
+  53   1              return ad;
+  54   1      }
+C51 COMPILER V9.02   APP                                                                   07/22/2021 22:23:47 PAGE 2   
+
+  55          
+  56          
+  57          
+  58          void InitTimer3(void)           //100us@12.000MHz
+  59          {
+  60   1              T4T3M |= 0x02;
+  61   1              T3L = 0x50;
+  62   1              T3H = 0xFB;
+  63   1              T4T3M |= 0x08;
+  64   1              IE2 |= 0x20;
+  65   1      }
+  66          
+  67          
+  68          
+  69          
+  70          void CheckBatteryVoltage(void)
+  71          {
+  72   1              uint8 i;
+  73   1              uint32 v = 0;
+  74   1              for(i = 0;i < 8;i++)
+  75   1              {
+  76   2                      v += GetADCResult(ADC_BAT);
+  77   2              }
+  78   1              v >>= 3;
+  79   1              
+  80   1              v = v * 2475 / 256;//adc / 1024 * 3300 * 3(3代表放大3倍，因为采集电压时电阻分压了)
+  81   1              BatteryVoltage = v;
+  82   1      }
+  83          
+  84          uint16 GetBatteryVoltage(void)
+  85          {//电压毫伏
+  86   1              return BatteryVoltage;
+  87   1      }
+  88          
+  89          void Buzzer(void)
+  90          {//放到100us的定时中断里面
+  91   1              static bool fBuzzer = FALSE;
+  92   1              static uint32 t1 = 0;
+  93   1              static uint32 t2 = 0;
+  94   1              if(fBuzzer)
+  95   1              {
+  96   2                      if(++t1 >= 2)
+  97   2                      {
+  98   3                              t1 = 0;
+  99   3                              BUZZER = !BUZZER;//2.5KHz
+ 100   3                      }
+ 101   2              }
+ 102   1              else
+ 103   1              {
+ 104   2                      BUZZER = 0;
+ 105   2              }
+ 106   1      
+ 107   1              
+ 108   1              if(BuzzerState == 0)
+ 109   1              {
+ 110   2                      fBuzzer = FALSE;
+ 111   2                      t2 = 0;
+ 112   2              }
+ 113   1              else if(BuzzerState == 1)
+ 114   1              {
+ 115   2                      t2++;
+ 116   2                      if(t2 < 5000)
+C51 COMPILER V9.02   APP                                                                   07/22/2021 22:23:47 PAGE 3   
+
+ 117   2                      {
+ 118   3                              fBuzzer = TRUE;
+ 119   3                      }
+ 120   2                      else if(t2 < 10000)
+ 121   2                      {
+ 122   3                              fBuzzer = FALSE;
+ 123   3                      }
+ 124   2                      else
+ 125   2                      {
+ 126   3                              t2 = 0;
+ 127   3                      }
+ 128   2              }
+ 129   1      }
+ 130          
+ 131          bool  manual = FALSE;
+ 132          void t3int() interrupt 19
+ 133          {//定时器3中断  100us
+ 134   1              static uint16 time = 0;
+ 135   1              static uint16 timeBattery = 0;
+ 136   1      
+ 137   1              Buzzer();
+ 138   1              if(++time >= 10)
+ 139   1              {
+ 140   2                      time = 0;
+ 141   2                      gSystemTickCount++;
+ 142   2                      Ps2TimeCount++;
+ 143   2                      if(GetBatteryVoltage() < 6400)//小于6.4V报警
+ 144   2                      {
+ 145   3                              timeBattery++;
+ 146   3                              if(timeBattery > 5000)//持续5秒
+ 147   3                              {
+ 148   4                                      //BuzzerState = 1;
+ 149   4                              }
+ 150   3                      }
+ 151   2                      else
+ 152   2                      {
+ 153   3                              timeBattery = 0;
+ 154   3                              if ( manual == FALSE)
+ 155   3                              {
+ 156   4                              //      BuzzerState = 0;
+ 157   4                              }
+ 158   3                      }
+ 159   2              }
+ 160   1      }
+ 161          
+ 162          void TaskTimeHandle(void)
+ 163          {
+ 164   1              static uint32 time = 10;
+ 165   1              static uint32 times = 0;
+ 166   1              if(gSystemTickCount > time)
+ 167   1              {
+ 168   2                      time += 10;
+ 169   2                      times++;
+ 170   2                      if(times % 2 == 0)//20ms
+ 171   2                      {
+ 172   3                              ServoPwmDutyCompare();
+ 173   3                      }
+ 174   2              }
+ 175   1              
+ 176   1      }
+ 177          
+ 178          void TaskRun(void)
+C51 COMPILER V9.02   APP                                                                   07/22/2021 22:23:47 PAGE 4   
+
+ 179          {
+ 180   1      
+ 181   1              static uint8 keycount = 0;
+ 182   1              int16 distance1;
+ 183   1              int16 distance2;
+ 184   1              TaskTimeHandle();
+ 185   1              CheckBatteryVoltage();
+ 186   1              TaskPCMsgHandle();
+ 187   1              TaskBLEMsgHandle();
+ 188   1              TaskRobotRun();
+ 189   1      
+ 190   1              if(KEY == 0)
+ 191   1              {
+ 192   2                      DelayMs(60);
+ 193   2                      {
+ 194   3                              if(KEY == 0)
+ 195   3                              {
+ 196   4                                      keycount++;
+ 197   4                              }
+ 198   3                              else
+ 199   3                              {
+ 200   4                                      if (keycount > 20)
+ 201   4                                      {
+ 202   5      //                                      keycount = 0;
+ 203   5      //                                      DelayMs(5000);
+ 204   5      ////                                    clear();
+ 205   5                                              FullActRun(1,1);
+ 206   5                                              DelayMs(5000);
+ 207   5                                              FullActRun(0,1);
+ 208   5                                              McuToPCSendData(CMD_FULL_ACTION_ERASE,0,0);
+ 209   5      //                                      distance1 = getdata();
+ 210   5      //                                      distance2 = getdata1();
+ 211   5      //                                      if(distance2<200&&distance1<200) LED = ~LED;                    
+ 212   5                                              return;
+ 213   5                                      }
+ 214   4                                      else
+ 215   4                                      {
+ 216   5                                              keycount = 0;
+ 217   5                                              LED = ~LED;
+ 218   5                                              FullActRun(1,1);
+ 219   5                                              DelayMs(5000);
+ 220   5                                              FullActRun(0,1);
+ 221   5                                              McuToPCSendData(CMD_FULL_ACTION_ERASE,0,0);
+ 222   5      //                                      distance1 =getdata();
+ 223   5      //                                      distance2 = getdata1();
+ 224   5      //                                      if(distance2<200&&distance1<200) LED = ~LED;
+ 225   5                                      }
+ 226   4                              }
+ 227   3                      }
+ 228   2              }
+ 229   1      }
+*** WARNING C280 IN LINE 182 OF APP.C: 'distance1': unreferenced local variable
+*** WARNING C280 IN LINE 183 OF APP.C: 'distance2': unreferenced local variable
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    834    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     31       9
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+C51 COMPILER V9.02   APP                                                                   07/22/2021 22:23:47 PAGE 5   
+
+   BIT SIZE         =      3    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  2 WARNING(S),  0 ERROR(S)

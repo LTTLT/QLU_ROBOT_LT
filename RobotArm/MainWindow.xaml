@@ -6,25 +6,40 @@
         xmlns:local="clr-namespace:RobotArm"
         xmlns:servo="clr-namespace:RobotArm.servo"
         mc:Ignorable="d"
-        Title="开源双足机器人V1.3" Height="650" Width="1180" MouseDown="Window_MouseDown" WindowStartupLocation="CenterScreen">
+        Title="上位机" Height="986.4" Width="1648.1" MouseDown="Window_MouseDown" WindowStartupLocation="CenterScreen">
 
-    <Grid>
+    <Grid Margin="-102,0,-0.4,-0.2">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="65*"/>
+            <RowDefinition Height="892*"/>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="1.8*"/>
+            <ColumnDefinition Width="70*"/>
+            <ColumnDefinition Width="337*"/>
+            <ColumnDefinition Width="465*"/>
         </Grid.ColumnDefinitions>
-        <Border BorderThickness="1" BorderBrush="LightBlue" Grid.Column="0" Margin="5">
+        <Border BorderThickness="1" BorderBrush="LightBlue" Grid.Column="0" Margin="5,5,2.4,4.8" RenderTransformOrigin="0.966,0.476" Grid.RowSpan="2" Grid.ColumnSpan="2">
 
-            <Canvas x:Name="servosView">
-                <servo:ServoView x:Name="servo1" ServoId="1" Width="106" Height="78" Canvas.Left="49" Canvas.Top="428"/>
-                <servo:ServoView x:Name="servo2" ServoId="2" Width="106" Height="78" Canvas.Left="49" Canvas.Top="302"/>
-                <servo:ServoView x:Name="servo3" ServoId="3" Width="106" Height="78" Canvas.Left="49" Canvas.Top="176"/>
-                <servo:ServoView x:Name="servo4" ServoId="4" Width="106" Height="78" Canvas.Left="230" Canvas.Top="428"/>
-                <servo:ServoView x:Name="servo5" ServoId="5" Width="106" Height="78" Canvas.Left="230" Canvas.Top="302"/>
-                <servo:ServoView x:Name="servo6" ServoId="6" Width="106" Height="78" Canvas.Left="230" Canvas.Top="176"/>
+            <Canvas x:Name="servosView" HorizontalAlignment="Left" Margin="99.2,0.2,0,0.4" Width="659">
+                <servo:ServoView x:Name="servo1" ServoId="1" Width="106" Height="78" Canvas.Top="600" Canvas.Left="114"/>
+                <servo:ServoView x:Name="servo2" ServoId="2" Width="106" Height="77" Canvas.Left="139" Canvas.Top="357"/>
+                <servo:ServoView x:Name="servo3" ServoId="3" Width="106" Height="78" Canvas.Left="521" Canvas.Top="137"/>
+                <servo:ServoView x:Name="servo4" ServoId="4" Width="106" Height="78" Canvas.Left="10" Canvas.Top="133"/>
+                <servo:ServoView x:Name="servo5" ServoId="5" Width="106" Height="78" Canvas.Left="10" Canvas.Top="55"/>
+                <servo:ServoView x:Name="servo6" ServoId="6" Width="106" Height="78" Canvas.Left="521" Canvas.Top="59"/>
+                <servo:ServoView x:Name="servo7" ServoId="7" Width="106" Height="78" Canvas.Left="415" Canvas.Top="523"/>
+                <servo:ServoView x:Name="servo8" ServoId="8" Width="106" Height="78" Canvas.Top="517" Canvas.Left="114"/>
+                <servo:ServoView x:Name="servo9" ServoId="9" Width="106" Height="78" Canvas.Left="415" Canvas.Top="440"/>
+                <servo:ServoView x:Name="servo10" ServoId="10" Width="106" Height="78" Canvas.Left="250" Canvas.Top="357"/>
+                <servo:ServoView x:Name="servo11" ServoId="11" Width="106" Height="78" Canvas.Top="434" Canvas.Left="114"/>
+                <servo:ServoView x:Name="servo12" ServoId="12" Width="106" Height="78" Canvas.Left="415" Canvas.Top="59"/>
+                <servo:ServoView x:Name="servo13" ServoId="13" Width="106" Height="78" Canvas.Left="121" Canvas.Top="55"/>
+                <servo:ServoView x:Name="servo14" ServoId="14" Width="106" Height="78" Canvas.Top="357" Canvas.Left="356"/>
+                <servo:ServoView x:Name="servo15" ServoId="15" Width="106" Height="78" Canvas.Left="250" Canvas.Top="203"/>
+                <servo:ServoView x:Name="servo16" ServoId="16" Width="106" Height="78" Canvas.Left="415" Canvas.Top="607"/>
             </Canvas>
         </Border>
-        <Grid Grid.Column="1">
+        <Grid Grid.Column="2" Margin="7.6,0,0,-0.2" Grid.RowSpan="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="5*"/>
                 <RowDefinition Height="1.5*"/>
@@ -37,7 +52,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="1.2*"/>
             </Grid.ColumnDefinitions>
-            <DataGrid x:Name="actionList" Grid.ColumnSpan="4" Grid.Row="0" Margin="5" AutoGenerateColumns="False" GridLinesVisibility="All" CanUserAddRows="False" SelectionMode="Single"  CanUserResizeColumns="False" CanUserResizeRows="False" CurrentCellChanged="onCellChange">
+            <DataGrid x:Name="actionList" Grid.ColumnSpan="4" Grid.Row="0" Margin="0,10,-0.12,99.2" AutoGenerateColumns="False" GridLinesVisibility="All" CanUserAddRows="False" SelectionMode="Single"  CanUserResizeColumns="False" CanUserResizeRows="False" CurrentCellChanged="onCellChange">
                 <DataGrid.Resources>
                     <Style TargetType="DataGridRow">
                     </Style>
@@ -50,21 +65,31 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="编号" Width="50" Binding="{Binding Path=itemID}" IsReadOnly="True"/>
-                    <DataGridTextColumn Header="时间(ms)" Width="80" Binding="{Binding Path=servoTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <DataGridTextColumn Header="ID:1" Width="90" Binding="{Binding Path=servoAngles[0], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                    <DataGridTextColumn Header="ID:2" Width="90" Binding="{Binding Path=servoAngles[1], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                    <DataGridTextColumn Header="ID:3" Width="90" Binding="{Binding Path=servoAngles[2], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                    <DataGridTextColumn Header="ID:4" Width="90" Binding="{Binding Path=servoAngles[3], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                    <DataGridTextColumn Header="ID:5" Width="90" Binding="{Binding Path=servoAngles[4], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                    <DataGridTextColumn Header="ID:6" Width="90" Binding="{Binding Path=servoAngles[5], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="动作组编号" Width="70" Binding="{Binding Path=itemID}" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="time(ms)" Width="70" Binding="{Binding Path=servoTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <DataGridTextColumn Header="1" Width="30" Binding="{Binding Path=servoAngles[0], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="2" Width="30" Binding="{Binding Path=servoAngles[1], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="3" Width="30" Binding="{Binding Path=servoAngles[2], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="4" Width="30" Binding="{Binding Path=servoAngles[3], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="5" Width="30" Binding="{Binding Path=servoAngles[4], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="6" Width="30" Binding="{Binding Path=servoAngles[5], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="7" Width="30" Binding="{Binding Path=servoAngles[6], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="8" Width="30" Binding="{Binding Path=servoAngles[7], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="9" Width="30" Binding="{Binding Path=servoAngles[8], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="10" Width="30" Binding="{Binding Path=servoAngles[9], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="11" Width="30" Binding="{Binding Path=servoAngles[10], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="12" Width="30" Binding="{Binding Path=servoAngles[11], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="13" Width="30" Binding="{Binding Path=servoAngles[12], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="14" Width="30" Binding="{Binding Path=servoAngles[13], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="15" Width="30" Binding="{Binding Path=servoAngles[14], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                    <DataGridTextColumn Header="16" Width="30" Binding="{Binding Path=servoAngles[15], Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
                 </DataGrid.Columns>
 
             </DataGrid>
             <Border BorderThickness="1" BorderBrush="LightBlue"  Grid.ColumnSpan="4" Grid.Row="1" Margin="5">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="动作时间" Margin="20"/>
-                    <TextBox x:Name="actionTime" Text="1000" Width="50" Margin="0,20,30,20"/>
+                    <TextBox x:Name="actionTime" Text="1000" Width="50" Margin="0,20,30,64.6"/>
                     <Button Content="添加动作" Margin="20,15,20,15" Width="100" Click="addAction"/>
                     <Button Content="删除动作" Margin="20,15,20,15" Width="100" Click="deleteAction"/>
                     <Button Content="更新动作" Margin="20,15,20,15" Width="100" Click="updateAction"/>

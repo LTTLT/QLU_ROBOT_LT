@@ -1,0 +1,13 @@
+".\Obj\STARTUP.obj",
+".\Obj\App.obj",
+".\Obj\Bluetooth.obj",
+".\Obj\Flash.obj",
+".\Obj\main.obj",
+".\Obj\PCMsg.obj",
+".\Obj\PS2GamePad.obj",
+".\Obj\PWM.obj",
+".\Obj\RobotRun.obj",
+".\Obj\BusServoCtrl.obj" 
+TO ".\Obj\OpenArm" 
+
+PRINT(".\Obj\OpenArm.map") DISABLEWARNING (16) 

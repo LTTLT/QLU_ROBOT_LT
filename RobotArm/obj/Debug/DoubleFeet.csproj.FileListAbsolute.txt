@@ -81,3 +81,21 @@ E:\project\2017\windows\开源机械臂\双足\双足 V1.3\Double Legged  PWM\Ro
 E:\project\2017\windows\开源机械臂\双足\双足 V1.3\Double Legged  PWM\RobotArm\obj\Debug\DoubleFeet.csproj.CoreCompileInputs.cache
 E:\project\2017\windows\开源机械臂\双足\双足 V1.3\Double Legged  PWM\RobotArm\obj\Debug\DoubleFeet.exe
 E:\project\2017\windows\开源机械臂\双足\双足 V1.3\Double Legged  PWM\RobotArm\obj\Debug\DoubleFeet.pdb
+D:\dancerobot\RobotArm\bin\Debug\DoubleFeet.exe.config
+D:\dancerobot\RobotArm\bin\Debug\DoubleFeet.exe
+D:\dancerobot\RobotArm\bin\Debug\DoubleFeet.pdb
+D:\dancerobot\RobotArm\obj\Debug\DoubleFeet.csproj.AssemblyReference.cache
+D:\dancerobot\RobotArm\obj\Debug\MainWindow.g.cs
+D:\dancerobot\RobotArm\obj\Debug\servo\ServoView.g.cs
+D:\dancerobot\RobotArm\obj\Debug\App.g.cs
+D:\dancerobot\RobotArm\obj\Debug\GeneratedInternalTypeHelper.g.cs
+D:\dancerobot\RobotArm\obj\Debug\DoubleFeet_MarkupCompile.cache
+D:\dancerobot\RobotArm\obj\Debug\DoubleFeet_MarkupCompile.lref
+D:\dancerobot\RobotArm\obj\Debug\MainWindow.baml
+D:\dancerobot\RobotArm\obj\Debug\servo\ServoView.baml
+D:\dancerobot\RobotArm\obj\Debug\DoubleFeet.g.resources
+D:\dancerobot\RobotArm\obj\Debug\RobotArm.Properties.Resources.resources
+D:\dancerobot\RobotArm\obj\Debug\DoubleFeet.csproj.GenerateResource.cache
+D:\dancerobot\RobotArm\obj\Debug\DoubleFeet.csproj.CoreCompileInputs.cache
+D:\dancerobot\RobotArm\obj\Debug\DoubleFeet.exe
+D:\dancerobot\RobotArm\obj\Debug\DoubleFeet.pdb

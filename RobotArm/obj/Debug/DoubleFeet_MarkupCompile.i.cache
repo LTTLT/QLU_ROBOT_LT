@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-E:\2017工程项目\开源机械臂\双足\Double Feet 1~6\RobotArm\obj\Debug\
+D:\dancerobot\RobotArm\obj\Debug\
 RobotArm
 none
 false
 DEBUG;TRACE
-E:\2017工程项目\开源机械臂\双足\Double Feet 1~6\RobotArm\App.xaml
+D:\dancerobot\RobotArm\App.xaml
 21854731734
 
-8-858446728
+8-1897854296
 13-1012886045
 MainWindow.xaml;servo\ServoView.xaml;
 
-False
+True
 

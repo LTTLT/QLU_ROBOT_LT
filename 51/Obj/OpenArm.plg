@@ -1,0 +1,34 @@
+<html>
+<body>
+<pre>
+<h1>礦ision Build Log</h1>
+<h2>Project:</h2>
+C:\Users\q6528\Desktop\中国机器人大赛\51\OpenArm.uvproj
+Project File Date:  07/19/2021
+
+<h2>Output:</h2>
+Build target 'Target 1'
+compiling App.c...
+APP.C(212): error C141: syntax error near '/'
+Target not created
+Build target 'Target 1'
+compiling App.c...
+APP.C(182): warning C280: 'distance1': unreferenced local variable
+APP.C(183): warning C280: 'distance2': unreferenced local variable
+linking...
+Program Size: data=18.6 xdata=1562 const=38 code=8214
+creating hex file from ".\Obj\OpenArm"...
+".\Obj\OpenArm" - 0 Error(s), 2 Warning(s).
+Build target 'Target 1'
+compiling App.c...
+APP.C(215): error C141: syntax error near '/'
+compiling RobotRun.c...
+Target not created
+Build target 'Target 1'
+compiling App.c...
+APP.C(182): warning C280: 'distance1': unreferenced local variable
+APP.C(183): warning C280: 'distance2': unreferenced local variable
+linking...
+Program Size: data=18.6 xdata=1562 const=38 code=8278
+creating hex file from ".\Obj\OpenArm"...
+".\Obj\OpenArm" - 0 Error(s), 2 Warning(s).

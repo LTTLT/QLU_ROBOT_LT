@@ -2,22 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.IO.Ports;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Windows.Threading;
 using System.Xml;
 
 namespace RobotArm
@@ -37,10 +28,10 @@ namespace RobotArm
         public const int CMD_ACTION_DOWNLOAD = 25;
 
         //舵机信息
-        public const int SERVO_NUM = 6;
+        public const int SERVO_NUM = 16;
 
         
-        public const int MAX_ARGS_LENTH = 35;//最大的命令长度
+        public const int MAX_ARGS_LENTH = 60;//最大的命令长度待修改
 
 
         public const UInt16 UNDEFINECMD = 0xFFFF;//命令buffer默认参数
@@ -246,7 +237,7 @@ namespace RobotArm
         private void makeAndSendCmd(int cmdType,UInt16[] args)//处理参数转换成标准命令协议格式然后发送
         {
             //sendingData = true;
-            byte[] dataSend = new byte[50];
+            byte[] dataSend = new byte[100];//修改了，之前是50
             byte lenth;
             dataSend[0] = 0x55;
             dataSend[1] = 0x55;
@@ -385,6 +376,16 @@ namespace RobotArm
                 servoAngle.Add(servo4.CurAngle);
                 servoAngle.Add(servo5.CurAngle);
                 servoAngle.Add(servo6.CurAngle);
+                servoAngle.Add(servo7.CurAngle);
+                servoAngle.Add(servo8.CurAngle);
+                servoAngle.Add(servo9.CurAngle);
+                servoAngle.Add(servo10.CurAngle);
+                servoAngle.Add(servo11.CurAngle);
+                servoAngle.Add(servo12.CurAngle);
+                servoAngle.Add(servo13.CurAngle);
+                servoAngle.Add(servo14.CurAngle);
+                servoAngle.Add(servo15.CurAngle);
+                servoAngle.Add(servo16.CurAngle);
                 m_ServoActions[selectIndex].servoAngles = servoAngle;
                 m_ServoActions[selectIndex].servoTime = Convert.ToUInt16(actionTime.Text);
             }
@@ -430,6 +431,16 @@ namespace RobotArm
             servoAngle.Add(servo4.CurAngle);
             servoAngle.Add(servo5.CurAngle);
             servoAngle.Add(servo6.CurAngle);
+            servoAngle.Add(servo7.CurAngle);
+            servoAngle.Add(servo8.CurAngle);
+            servoAngle.Add(servo9.CurAngle);
+            servoAngle.Add(servo10.CurAngle);
+            servoAngle.Add(servo11.CurAngle);
+            servoAngle.Add(servo12.CurAngle);
+            servoAngle.Add(servo13.CurAngle);
+            servoAngle.Add(servo14.CurAngle);
+            servoAngle.Add(servo15.CurAngle);
+            servoAngle.Add(servo16.CurAngle);
             actionItem.servoAngles = servoAngle;
             m_ServoActions.Insert(item, actionItem);
             setActionListSelectRow(item);
@@ -438,7 +449,7 @@ namespace RobotArm
         private void resetServo(object sender, RoutedEventArgs e)//舵机重置
         {
             needSendAngelChangeFlag = false;
-            UInt16[] data = new UInt16[9];
+            UInt16[] data = new UInt16[19];//修改了，之前为9
             data[0] = 1000;//固定的复位舵机速度
             servo1.CurAngle = 500;
             servo2.CurAngle = 500;
@@ -446,6 +457,16 @@ namespace RobotArm
             servo4.CurAngle = 500;
             servo5.CurAngle = 500;
             servo6.CurAngle = 500;
+            servo7.CurAngle = 500;
+            servo8.CurAngle = 500;
+            servo9.CurAngle = 500;
+            servo10.CurAngle = 500;
+            servo11.CurAngle = 500;
+            servo12.CurAngle = 500;
+            servo13.CurAngle = 500;
+            servo14.CurAngle = 500;
+            servo15.CurAngle = 500;
+            servo16.CurAngle = 500;
             for (int i = 0; i < SERVO_NUM; i++)
             {
                 data[i + 1] = 500;
@@ -471,7 +492,7 @@ namespace RobotArm
                     XmlNodeList timeInfo = doc.GetElementsByTagName("Time");
                     if(IDInfo.Count != moveInfo.Count || IDInfo.Count != timeInfo.Count)
                     {
-                        MessageBox.Show("XML文件出错");
+                        MessageBox.Show("XML文件出错1");
                         return;
                     }
                     m_ServoActions.Clear();
@@ -484,11 +505,11 @@ namespace RobotArm
                         int posTime = timeTemp.IndexOf('T');
                         string timeStr = timeTemp.Substring(posTime + 1, timeTemp.Length - posTime - 1);
                         actionItem.servoTime = Convert.ToUInt16(timeStr);
-                        string[] separator = { " ","#1 P","#2 P","#4 P","#3 P","#5 P","#6 P"};
+                        string[] separator = { " ","#1 P","#2 P","#3 P","#4 P","#5 P","#6 P","#7 P","#8 P","#9 P","#10 P","#11 P","#12 P","#13 P","#14 P","#15 P","#16 P"};
                         string[] angleStr = moveInfo[i].InnerText.Split(separator,StringSplitOptions.RemoveEmptyEntries);
-                        if(angleStr.Length != SERVO_NUM)
+                        if (angleStr.Length != SERVO_NUM)
                         {
-                            MessageBox.Show("XML文件出错");
+                            MessageBox.Show("XML文件出错2");//这个是18？
                             return;
                         }
                         List<UInt16> servoAngle = new List<UInt16>();
@@ -500,7 +521,7 @@ namespace RobotArm
                             }
                             catch
                             {
-                                MessageBox.Show("XML文件出错");
+                                MessageBox.Show("XML文件出错3");
                                 return;
                             }
                         }
@@ -523,7 +544,7 @@ namespace RobotArm
             Microsoft.Win32.SaveFileDialog file_Dialog = new Microsoft.Win32.SaveFileDialog();
             file_Dialog.DefaultExt = ".xml";
             file_Dialog.Filter = "xml file|*.xml";
-            string posStr = "POS1X=135Y=2 POS2X=279Y=23 POS3X=315Y=123 POS5X=409Y=221 POS6X=285Y=321 POS7X=337Y=419";
+            string posStr = "POS1X = 135Y = 2 POS2X = 279Y = 23 POS3X = 315Y = 123 POS4X = 409Y = 221 POS5X = 285Y = 321 POS6X = 337Y = 419" ;
             if (file_Dialog.ShowDialog() == true)
             {
                 XmlTextWriter writer = new XmlTextWriter(file_Dialog.FileName, System.Text.Encoding.UTF8);
@@ -802,7 +823,7 @@ namespace RobotArm
             needSendAngelChangeFlag = false;
             if (flag)
                 setActionListSelectRow(index);
-            UInt16[] data = new UInt16[9];
+            UInt16[] data = new UInt16[17];
            data[0] = m_ServoActions[index].servoTime;
            servo1.CurAngle = m_ServoActions[index].servoAngles[0];
            servo2.CurAngle = m_ServoActions[index].servoAngles[1];
@@ -810,6 +831,16 @@ namespace RobotArm
            servo4.CurAngle = m_ServoActions[index].servoAngles[3];
            servo5.CurAngle = m_ServoActions[index].servoAngles[4];
            servo6.CurAngle = m_ServoActions[index].servoAngles[5];
+            servo7.CurAngle = m_ServoActions[index].servoAngles[6];
+            servo8.CurAngle = m_ServoActions[index].servoAngles[7];
+            servo9.CurAngle = m_ServoActions[index].servoAngles[8];
+            servo10.CurAngle = m_ServoActions[index].servoAngles[9];
+            servo11.CurAngle = m_ServoActions[index].servoAngles[10];
+            servo12.CurAngle = m_ServoActions[index].servoAngles[11];
+            servo13.CurAngle = m_ServoActions[index].servoAngles[12];
+            servo14.CurAngle = m_ServoActions[index].servoAngles[13];
+            servo15.CurAngle = m_ServoActions[index].servoAngles[14];
+            servo16.CurAngle = m_ServoActions[index].servoAngles[15];
             for (int i = 0; i < SERVO_NUM; i++)
            {
                data[i + 1] = m_ServoActions[index].servoAngles[i];

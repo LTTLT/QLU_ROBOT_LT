@@ -1,0 +1,316 @@
+C51 COMPILER V9.02   PS2GAMEPAD                                                            07/22/2021 04:22:26 PAGE 1   
+
+
+C51 COMPILER V9.02, COMPILATION OF MODULE PS2GAMEPAD
+OBJECT MODULE PLACED IN .\Obj\PS2GamePad.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE PS2GamePad.c LARGE OMF2 ROM(COMPACT) BROWSE DEBUG PRINT(.\Obj\PS2GamePad.ls
+                    -t) OBJECT(.\Obj\PS2GamePad.obj)
+
+line level    source
+
+   1          /*****************************************************************************
+   2           ** File                        : ApiPS2GamePad.c
+   3           ** Author                      : Zheng23
+   4           ** Date                        :                       
+   5           ** Function            : PS2ÓÎÏ·ÊÖ±ú½ÓÊÕÆ÷Çý¶¯
+   6          /*****************************************************************************/
+   7          #include "include.h"
+   8          
+   9          
+  10          u16 xdata Handkey;
+  11          u16 xdata Lastkey;
+  12          u8 xdata Comd[2]={0x01,0x42};   //¿ªÊ¼ÃüÁî¡£ÇëÇóÊý¾Ý
+  13          u8 xdata Data[9]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}; //Êý¾Ý´æ´¢Êý×é
+  14          u16 code MASK[]={
+  15              PSB_SELECT,
+  16              PSB_L3,
+  17              PSB_R3 ,
+  18              PSB_START,
+  19              PSB_PAD_UP,
+  20              PSB_PAD_RIGHT,
+  21              PSB_PAD_DOWN,
+  22              PSB_PAD_LEFT,
+  23              PSB_L2,
+  24              PSB_R2,
+  25              PSB_L1,
+  26              PSB_R1 ,
+  27              PSB_TRIANGLE,
+  28              PSB_CIRCLE,
+  29              PSB_CROSS,
+  30              PSB_SQUARE
+  31                  };      //°´¼üÖµÓë°´¼üÃ÷
+  32          
+  33          
+  34          
+  35          static void Delay(unsigned char time)
+  36          {
+  37   1              time *=1;
+  38   1              while(--time);
+  39   1      }
+  40          
+  41          void InitPS2(void)
+  42          {
+  43   1              P2M0 |= ((1 << 2) | (1 << 3) | 1);
+  44   1              P2M1 &= ~((1 << 2) | (1 << 3) | 1);
+  45   1              PS2_SetInit();           //ÅäÅäÖÃ³õÊ¼»¯,ÅäÖÃ¡°ºìÂÌµÆÄ£Ê½¡±£¬²¢Ñ¡ÔñÊÇ·ñ¿ÉÒÔÐÞ¸Ä                                                                    
+  46   1      }
+  47          
+  48          //ÏòÊÖ±ú·¢ËÍÃüÁî
+  49          void PS2_Cmd(u8 CMD)
+  50          {
+  51   1              u16 ref=0x01;
+  52   1              Data[1] = 0;
+  53   1              for(ref=0x01;ref<0x0100;ref<<=1)
+  54   1              {
+C51 COMPILER V9.02   PS2GAMEPAD                                                            07/22/2021 04:22:26 PAGE 2   
+
+  55   2                      if(ref&CMD)
+  56   2                      {
+  57   3                              DO_H;                   //Êä³öÒÔÎª¿ØÖÆÎ»
+  58   3                      }
+  59   2                      else DO_L;
+  60   2      
+  61   2                      Delay(10);
+  62   2                      CLK_L;
+  63   2                      Delay(40);
+  64   2                      CLK_H;
+  65   2                      if(DI)
+  66   2                              Data[1] = ref|Data[1];
+  67   2                      Delay(10);
+  68   2              }
+  69   1      }
+  70          //ÅÐ¶ÏÊÇ·ñÎªºìµÆÄ£Ê½
+  71          //·µ»ØÖµ£»0£¬ºìµÆÄ£Ê½
+  72          //                ÆäËû£¬ÆäËûÄ£Ê½
+  73          u8 PS2_RedLight(void)
+  74          {
+  75   1              CS_L;
+  76   1              PS2_Cmd(Comd[0]);  //¿ªÊ¼ÃüÁî
+  77   1              PS2_Cmd(Comd[1]);  //ÇëÇóÊý¾Ý
+  78   1              CS_H;
+  79   1              if( Data[1] == 0X73)   return 0 ;
+  80   1              else return 1;
+  81   1      
+  82   1      }
+  83          //¶ÁÈ¡ÊÖ±úÊý¾Ý
+  84          void PS2_ReadData(void)
+  85          {
+  86   1              u8 byte;
+  87   1              u16 ref;
+  88   1      
+  89   1              CS_L;
+  90   1              Delay(10);
+  91   1              PS2_Cmd(Comd[0]);  //¿ªÊ¼ÃüÁî
+  92   1              PS2_Cmd(Comd[1]);  //ÇëÇóÊý¾Ý
+  93   1      
+  94   1              for(byte=2;byte<9;byte++)          //¿ªÊ¼½ÓÊÜÊý¾Ý
+  95   1              {
+  96   2                      for(ref=0x01;ref<0x100;ref<<=1)
+  97   2                      {
+  98   3      
+  99   3                              CLK_L;
+ 100   3                                      Delay(50);
+ 101   3                              CLK_H;
+ 102   3                            if(DI)
+ 103   3                            {
+ 104   4                                      Data[byte] = ref|Data[byte];
+ 105   4                                }
+ 106   3                          Delay(45); 
+ 107   3                      }
+ 108   2                              Delay(10);
+ 109   2              }
+ 110   1              CS_H;
+ 111   1      }
+ 112          
+ 113          //¶Ô¶Á³öÀ´µÄPS2µÄÊý¾Ý½øÐÐ´¦Àí      Ö»´¦ÀíÁË°´¼ü²¿·Ö         Ä¬ÈÏÊý¾ÝÊÇºìµÆÄ£Ê½  Ö»ÓÐÒ»¸ö°´¼ü°´ÏÂÊ±
+ 114          //°´ÏÂÎª0£¬ Î´°´ÏÂÎª1
+ 115          u8 PS2_DataKey()
+ 116          {
+C51 COMPILER V9.02   PS2GAMEPAD                                                            07/22/2021 04:22:26 PAGE 3   
+
+ 117   1              u8 index;
+ 118   1        Lastkey = Handkey;
+ 119   1              PS2_ClearData();
+ 120   1              PS2_ReadData();
+ 121   1      
+ 122   1              Handkey=(Data[4]<<8)|Data[3];     //ÕâÊÇ16¸ö°´¼ü  °´ÏÂÎª0£¬ Î´°´ÏÂÎª1
+ 123   1              for(index=0;index<16;index++)
+ 124   1              {           
+ 125   2                      if((Handkey&(1<<(MASK[index]-1)))==0)
+ 126   2                      return index+1;
+ 127   2              }
+ 128   1              return 0;          //Ã»ÓÐÈÎºÎ°´¼ü°´ÏÂ
+ 129   1      }
+ 130          bool PS2_NewButtonState( u16 button )
+ 131          {
+ 132   1        button = 0x0001u << ( button - 1 );  //ÊäÈëµÄbuttonµÄÖµÊÇ ¸Ã°´¼üÔÚÊý¾ÝÖÐËùÔÚbitµÄÖµ+1£¬ ÀýÈç PSB_SELECT 
+             -ºêµÄÖµ ÊÇ 1£¬ ÔÚÊý¾ÝÖÐµÄÎ»ÊÇ0Î»£¬ Èç´ËÀàÍÆ£¬
+ 133   1        return ( ( ( Lastkey ^ Handkey ) & button ) > 0 );  //½«ÉÏ´ÎµÄ°´¼üÊý¾ÝºÍÕâ´ÎµÄ°´¼üÊý¾Ý½øÐÐÒì»òÔËËã£¬½á¹û
+             -¾ÍÊÇÁ½´Î²»Í¬µÄ²¿·Ö»áÊÇ1£¬¾ÍµÃµ½ÁË×´Ì¬·¢ÉúÁË±ä»¯µÄ°´¼ü
+ 134   1                                                                  //È»ºóÔÚÓëÎÒÃÇÏëÒª¼ì²âµÄ°´¼ü½øÐÐÓëÔËËã£¬Èç¹ûÕâ¸ö°´¼ü·
+             -¢ÉúÁË±ä»¯£¬ÄÇÃ´½á¹û¾ÍÊÇ1£¬ ´óÓÚ0£¬ËùÒÔ·µ»Ø¾ÍÊÇtrue
+ 135   1      }
+ 136          
+ 137          bool PS2_Button( u16 button )
+ 138          {
+ 139   1        button = 0x0001u << ( button - 1 );  //ÊäÈëµÄbuttonµÄÖµÊÇ ¸Ã°´¼üÔÚÊý¾ÝÖÐËùÔÚbitµÄÖµ+1£¬ ÀýÈç PSB_SELECT 
+             -ºêµÄÖµ ÊÇ 1£¬ ÔÚÊý¾ÝÖÐµÄÎ»ÊÇ0Î»£¬ Èç´ËÀàÍÆ£¬
+ 140   1        return ( ( (~Handkey) & button ) > 0 );  //°´¼ü°´ÏÂÔò¶ÔÓ¦Î»Îª0£¬Ã»°´ÏÂÎª1£¬ ½«°´¼üÊý¾ÝÈ¡·´Ö®ºó£¬¾Í±ä³ÉÁË
+             -°´¼üÎª1£¬Ã»°´ÏÂÎª0
+ 141   1                                                       //ÔÙÓëÎÒÃÇÏëÒª¼ì²âµÄ°´¼ü×öÓëÔËËã£¬ÈôÕâ¸ö°´¼ü±»°´ÏÂ£¬¶ÔÓ¦Î»¾ÍÊÇ1£
+             -¬Ã»°´ÏÂ¾ÍÊÇ0£¬·µ»ØÓë0±È½ÏµÄ½á¹û£¬
+ 142   1      }
+ 143          bool PS2_ButtonPressed( u16 button )
+ 144          {
+ 145   1        return (PS2_NewButtonState( button ) && PS2_Button( button ));  //°´¼ü±»°´×¡£¬²¢ÇÒÕâ¸öÊÇ°´¼üµÄÒ»¸öÐÂµÄ×´
+             -Ì¬£¬ÄÇÃ´¾ÍÊÇ°´¼ü¸Õ±»°´ÏÂ
+ 146   1      }
+ 147          
+ 148          //µÃµ½Ò»¸öÒ¡¸ËµÄÄ£ÄâÁ¿   ·¶Î§0~256
+ 149          u8 PS2_AnologData(u8 button)
+ 150          {
+ 151   1              return Data[button];
+ 152   1      }
+ 153          
+ 154          //Çå³ýÊý¾Ý»º³åÇø
+ 155          void PS2_ClearData()
+ 156          {
+ 157   1              u8 a;
+ 158   1              for(a=0;a<9;a++)
+ 159   1                      Data[a]=0x00;
+ 160   1      }
+ 161          /******************************************************
+ 162          Function:    void PS2_Vibration(u8 motor1, u8 motor2)
+ 163          Description: ÊÖ±úÕð¶¯º¯Êý£¬
+ 164          Calls:           void PS2_Cmd(u8 CMD);
+ 165          Input: motor1:ÓÒ²àÐ¡Õð¶¯µç»ú 0x00¹Ø£¬ÆäËû¿ª
+ 166                     motor2:×ó²à´óÕð¶¯µç»ú 0x40~0xFF µç»ú¿ª£¬ÖµÔ½´ó Õð¶¯Ô½´ó
+ 167          ******************************************************/
+ 168          void PS2_Vibration(u8 motor1, u8 motor2)
+ 169          {
+ 170   1              CS_L;
+ 171   1              Delay(50);
+C51 COMPILER V9.02   PS2GAMEPAD                                                            07/22/2021 04:22:26 PAGE 4   
+
+ 172   1          PS2_Cmd(0x01);  //¿ªÊ¼ÃüÁî
+ 173   1              PS2_Cmd(0x42);  //ÇëÇóÊý¾Ý
+ 174   1              PS2_Cmd(0X00);
+ 175   1              PS2_Cmd(motor1);
+ 176   1              PS2_Cmd(motor2);
+ 177   1              PS2_Cmd(0X00);
+ 178   1              PS2_Cmd(0X00);
+ 179   1              PS2_Cmd(0X00);
+ 180   1              PS2_Cmd(0X00);
+ 181   1              CS_H;
+ 182   1              Delay(50);  
+ 183   1      }
+ 184          //short poll
+ 185          void PS2_ShortPoll(void)
+ 186          {
+ 187   1              CS_L;
+ 188   1              Delay(50);
+ 189   1              PS2_Cmd(0x01);  
+ 190   1              PS2_Cmd(0x42);  
+ 191   1              PS2_Cmd(0X00);
+ 192   1              PS2_Cmd(0x00);
+ 193   1              PS2_Cmd(0x00);
+ 194   1              CS_H;
+ 195   1              Delay(50);      
+ 196   1      }
+ 197          //½øÈëÅäÖÃ
+ 198          void PS2_EnterConfing(void)
+ 199          {
+ 200   1          CS_L;
+ 201   1              Delay(50);
+ 202   1              PS2_Cmd(0x01);  
+ 203   1              PS2_Cmd(0x43);  
+ 204   1              PS2_Cmd(0X00);
+ 205   1              PS2_Cmd(0x01);
+ 206   1              PS2_Cmd(0x00);
+ 207   1              PS2_Cmd(0X00);
+ 208   1              PS2_Cmd(0X00);
+ 209   1              PS2_Cmd(0X00);
+ 210   1              PS2_Cmd(0X00);
+ 211   1              CS_H;
+ 212   1              Delay(50);
+ 213   1      }
+ 214          //·¢ËÍÄ£Ê½ÉèÖÃ
+ 215          void PS2_TurnOnAnalogMode(void)
+ 216          {
+ 217   1              CS_L;
+ 218   1              Delay(50);
+ 219   1              PS2_Cmd(0x01);  
+ 220   1              PS2_Cmd(0x44);  
+ 221   1              PS2_Cmd(0X00);
+ 222   1              PS2_Cmd(0x01); //analog=0x01;digital=0x00  Èí¼þÉèÖÃ·¢ËÍÄ£Ê½
+ 223   1              PS2_Cmd(0x03); //Ox03Ëø´æÉèÖÃ£¬¼´²»¿ÉÍ¨¹ý°´¼ü¡°MODE¡±ÉèÖÃÄ£Ê½¡£
+ 224   1                                         //0xEE²»Ëø´æÈí¼þÉèÖÃ£¬¿ÉÍ¨¹ý°´¼ü¡°MODE¡±ÉèÖÃÄ£Ê½¡£
+ 225   1              PS2_Cmd(0X00);
+ 226   1              PS2_Cmd(0X00);
+ 227   1              PS2_Cmd(0X00);
+ 228   1              PS2_Cmd(0X00);
+ 229   1              CS_H;
+ 230   1              Delay(50);
+ 231   1      }
+ 232          //Õñ¶¯ÉèÖÃ
+ 233          void PS2_VibrationMode(void)
+C51 COMPILER V9.02   PS2GAMEPAD                                                            07/22/2021 04:22:26 PAGE 5   
+
+ 234          {
+ 235   1              CS_L;
+ 236   1              Delay(50);
+ 237   1              PS2_Cmd(0x01);  
+ 238   1              PS2_Cmd(0x4D);  
+ 239   1              PS2_Cmd(0X00);
+ 240   1              PS2_Cmd(0x00);
+ 241   1              PS2_Cmd(0X01);
+ 242   1              CS_H;
+ 243   1              Delay(50);      
+ 244   1      }
+ 245          //Íê³É²¢±£´æÅäÖÃ
+ 246          void PS2_ExitConfing(void)
+ 247          {
+ 248   1          CS_L;
+ 249   1              Delay(50);
+ 250   1              PS2_Cmd(0x01);  
+ 251   1              PS2_Cmd(0x43);  
+ 252   1              PS2_Cmd(0X00);
+ 253   1              PS2_Cmd(0x00);
+ 254   1              PS2_Cmd(0x5A);
+ 255   1              PS2_Cmd(0x5A);
+ 256   1              PS2_Cmd(0x5A);
+ 257   1              PS2_Cmd(0x5A);
+ 258   1              PS2_Cmd(0x5A);
+ 259   1              CS_H;
+ 260   1              Delay(50);
+ 261   1      }
+ 262          //ÊÖ±úÅäÖÃ³õÊ¼»¯
+ 263          void PS2_SetInit(void)
+ 264          {
+ 265   1              PS2_ShortPoll();
+ 266   1              PS2_ShortPoll();
+ 267   1              PS2_ShortPoll();
+ 268   1              PS2_EnterConfing();             //½øÈëÅäÖÃÄ£Ê½
+ 269   1              PS2_TurnOnAnalogMode(); //¡°ºìÂÌµÆ¡±ÅäÖÃÄ£Ê½£¬²¢Ñ¡ÔñÊÇ·ñ±£´æ
+ 270   1              PS2_VibrationMode();    //¿ªÆôÕð¶¯Ä£Ê½
+ 271   1              PS2_ExitConfing();              //Íê³É²¢±£´æÅäÖÃ
+ 272   1      }
+ 273          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    687    ----
+   CONSTANT SIZE    =     32    ----
+   XDATA SIZE       =     15    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

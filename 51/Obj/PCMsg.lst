@@ -1,0 +1,386 @@
+C51 COMPILER V9.02   PCMSG                                                                 07/22/2021 11:52:35 PAGE 1   
+
+
+C51 COMPILER V9.02, COMPILATION OF MODULE PCMSG
+OBJECT MODULE PLACED IN .\Obj\PCMsg.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE PCMsg.c LARGE OMF2 ROM(COMPACT) BROWSE DEBUG PRINT(.\Obj\PCMsg.lst) OBJECT(
+                    -.\Obj\PCMsg.obj)
+
+line level    source
+
+   1          #include "include.h"
+   2          
+   3          
+   4          
+   5          
+   6          
+   7          static bool fUartRxComplete = FALSE;
+   8          static uint8 xdata UartRxBuffer[260];
+   9          uint8 xdata Uart1RxBuffer[260];
+  10          unsigned char CMD_1[8]={0x50,0x03,0x00,0x34,0x00,0x01,0xc8,0x45};
+  11          static bool UartBusy = FALSE;
+  12          
+  13          uint8 xdata frameIndexSumSum[256];
+  14          uint16 UART1ModbusCRC(uint8 *ptr,uint16 ucLen);//CRC校验
+  15          
+  16          void InitUart1(void)
+  17          {
+  18   1      
+  19   1              SCON = 0x50;            //8位数据,可变波特率
+  20   1              AUXR |= 0x40;           //定时器1时钟为Fosc,即1T
+  21   1              AUXR &= 0xFE;           //串口1选择定时器1为波特率发生器
+  22   1              TMOD &= 0x0F;           //设定定时器1为16位自动重装方式
+  23   1              TL1 = 0xC7;             //设定定时初值//9600bps@12.000MHz
+  24   1              TH1 = 0xFE;             //设定定时初值
+  25   1              ET1 = 0;                //禁止定时器1中断
+  26   1              TR1 = 1;                //启动定时器1
+  27   1          ES = 1;                     //使能串口中断
+  28   1      }
+  29          
+  30          void Uart1SendData(BYTE dat)
+  31          {
+  32   1          SBUF = dat;                                 //Send data to UART buffer
+  33   1              while (!TI);
+  34   1      }
+  35          
+  36          void UART1SendDataPacket(uint8 dat[],uint8 count)
+  37          {
+  38   1              uint8 i;
+  39   1              for(i = 0; i < count; i++)
+  40   1              {
+  41   2                      Uart1SendData(dat[i]);
+  42   2              }
+  43   1      
+  44   1      }
+  45          
+  46           unsigned char ucRxFinish=0;
+  47           static unsigned char ucCnt=0,ucLen=0;
+  48           static unsigned char ucRxData[100];
+  49          void Uart1() interrupt 4 using 1
+  50          {
+  51   1              uint8 i;
+  52   1              uint8 rxBuf;
+  53   1              u16 C=0;
+  54   1              static uint8 startCodeSum = 0;
+C51 COMPILER V9.02   PCMSG                                                                 07/22/2021 11:52:35 PAGE 2   
+
+  55   1              static bool fFrameStart = FALSE;
+  56   1              static uint8 messageLength = 0;
+  57   1              static uint8 messageLengthSum = 2;
+  58   1              
+  59   1          if(RI)
+  60   1          {
+  61   2              RI = 0;                 //清除标志位
+  62   2              rxBuf = SBUF;           
+  63   2      //                      if(ucCnt==0)
+  64   2      //                      ucRxData[ucCnt++]=rxBuf ;//ucRxData[0]
+  65   2      //                              else    if((ucCnt==1)&(rxBuf==0x03))//
+  66   2      //                                      ucRxData[ucCnt++]=rxBuf;//ucRxData[1]
+  67   2      //                              else if(ucCnt==2)
+  68   2      //                                      {ucRxData[ucCnt++]=rxBuf; ucLen=ucRxData[2];}//ucRxData[2]
+  69   2      //                              else if((ucCnt>2)&(ucCnt<=(ucLen+4)))
+  70   2      //                                      ucRxData[ucCnt++]=rxBuf;//ucRxData[3]           
+  71   2      //                              if(ucCnt==(ucLen+5))
+  72   2      //                      { 
+  73   2      //                              C=UART1ModbusCRC(ucRxData,ucLen+3);
+  74   2      //                              
+  75   2      //                              if(C==((ucRxData[ucLen+3]<<8)|ucRxData[ucLen+4]))//
+  76   2      //                                      {ucRxFinish=1;  ucCnt=0;ucLen=0;}                       
+  77   2      //                              else 
+  78   2      //                                      {ucCnt=0;ucLen=0;}                              
+  79   2      //                      }                                                
+  80   2                      if(!fFrameStart)
+  81   2                      {
+  82   3                              if(rxBuf == 0x55)
+  83   3                              {
+  84   4      
+  85   4                                      startCodeSum++;
+  86   4                                      if(startCodeSum == 2)
+  87   4                                      {
+  88   5                                              startCodeSum = 0;
+  89   5                                              fFrameStart = TRUE;
+  90   5                                              messageLength = 1;
+  91   5                                      }
+  92   4                              }
+  93   3                              else
+  94   3                              {
+  95   4      
+  96   4                                      fFrameStart = FALSE;
+  97   4                                      messageLength = 0;
+  98   4              
+  99   4                                      startCodeSum = 0;
+ 100   4                              }
+ 101   3                              
+ 102   3                      }
+ 103   2                      if(fFrameStart)
+ 104   2                      {
+ 105   3                              Uart1RxBuffer[messageLength] = rxBuf;
+ 106   3                              if(messageLength == 2)
+ 107   3                              {
+ 108   4                                      messageLengthSum = Uart1RxBuffer[messageLength];
+ 109   4                                      if(messageLengthSum < 2)// || messageLengthSum > 30
+ 110   4                                      {
+ 111   5                                              messageLengthSum = 2;
+ 112   5                                              fFrameStart = FALSE;
+ 113   5                                              
+ 114   5                                      }
+ 115   4                                              
+ 116   4                              }
+C51 COMPILER V9.02   PCMSG                                                                 07/22/2021 11:52:35 PAGE 3   
+
+ 117   3                              messageLength++;
+ 118   3              
+ 119   3                              if(messageLength == messageLengthSum + 2) 
+ 120   3                              {
+ 121   4                                      if(fUartRxComplete == FALSE)
+ 122   4                                      {
+ 123   5                                              fUartRxComplete = TRUE;
+ 124   5                                              for(i = 0;i < messageLength;i++)
+ 125   5                                              {
+ 126   6                                                      UartRxBuffer[i] = Uart1RxBuffer[i];
+ 127   6                                              }
+ 128   5                                      }
+ 129   4                                      
+ 130   4      
+ 131   4                                      fFrameStart = FALSE;
+ 132   4                              }
+ 133   3                      }
+ 134   2          }
+ 135   1          if (TI)
+ 136   1          {
+ 137   2              TI = 0;                 //清除标志位
+ 138   2          }
+ 139   1      }
+ 140          
+ 141          void McuToPCSendData(uint8 cmd,uint8 prm1,uint8 prm2)
+ 142          {
+ 143   1              uint8 dat[8];
+ 144   1              uint8 datlLen = 2;
+ 145   1              switch(cmd)
+ 146   1              {
+ 147   2      
+ 148   2      //              case CMD_ACTION_DOWNLOAD:
+ 149   2      //                      datlLen = 2;
+ 150   2      //                      break;
+ 151   2      
+ 152   2                      default:
+ 153   2                              datlLen = 2;
+ 154   2                              break;
+ 155   2              }
+ 156   1      
+ 157   1              dat[0] = 0x55;
+ 158   1              dat[1] = 0x55;
+ 159   1              dat[2] = datlLen;
+ 160   1              dat[3] = cmd;
+ 161   1              dat[4] = prm1;
+ 162   1              dat[5] = prm2;
+ 163   1              UART1SendDataPacket(dat,datlLen + 2);
+ 164   1      }
+ 165          
+ 166          
+ 167          static bool UartRxOK(void)
+ 168          {
+ 169   1              if(fUartRxComplete)
+ 170   1              {
+ 171   2                      fUartRxComplete = FALSE;
+ 172   2                      return TRUE;
+ 173   2              }
+ 174   1              else
+ 175   1              {
+ 176   2                      return FALSE;
+ 177   2              }
+ 178   1      }
+C51 COMPILER V9.02   PCMSG                                                                 07/22/2021 11:52:35 PAGE 4   
+
+ 179          void FlashEraseAll();
+ 180          void SaveAct(uint8 fullActNum,uint8 frameIndexSum,uint8 frameIndex,uint8* pBuffer);
+ 181          void TaskPCMsgHandle(void)
+ 182          {
+ 183   1      
+ 184   1              uint16 i;
+ 185   1              uint8 cmd;
+ 186   1              uint8 id;
+ 187   1              uint8 servoCount;
+ 188   1              uint16 time;
+ 189   1              uint16 pos;
+ 190   1              uint16 times;
+ 191   1              uint8 fullActNum;
+ 192   1              if(UartRxOK())
+ 193   1              {
+ 194   2                      LED = !LED;
+ 195   2                      cmd = UartRxBuffer[3];
+ 196   2                      switch(cmd)
+ 197   2                      {
+ 198   3                              case CMD_MULT_SERVO_MOVE:
+ 199   3                                      servoCount = UartRxBuffer[4];
+ 200   3                                      time = UartRxBuffer[5] + (UartRxBuffer[6]<<8);
+ 201   3                                      for(i = 0; i < servoCount; i++)
+ 202   3                                      {
+ 203   4                                              id =  UartRxBuffer[7 + i * 3];
+ 204   4                                              pos = UartRxBuffer[8 + i * 3] + (UartRxBuffer[9 + i * 3]<<8);
+ 205   4              
+ 206   4                                              ServoSetPluseAndTime(id,pos,time);
+ 207   4                                              BusServoCtrl(id,SERVO_MOVE_TIME_WRITE,pos,time);
+ 208   4                                      }
+ 209   3                                      break;
+ 210   3                              
+ 211   3                              case CMD_FULL_ACTION_RUN:
+ 212   3                                      fullActNum = UartRxBuffer[4];//动作组编号
+ 213   3                                      times = UartRxBuffer[5] + (UartRxBuffer[6]<<8);//运行次数
+ 214   3                                      FullActRun(fullActNum,times);
+ 215   3                                      break;
+ 216   3                                      
+ 217   3                              case CMD_FULL_ACTION_STOP:
+ 218   3                                      FullActStop();
+ 219   3                                      break;
+ 220   3                                      
+ 221   3                              case CMD_FULL_ACTION_ERASE:
+ 222   3                                      FlashEraseAll();
+ 223   3                                      McuToPCSendData(CMD_FULL_ACTION_ERASE,0,0);
+ 224   3                                      break;
+ 225   3      
+ 226   3                              case CMD_ACTION_DOWNLOAD:
+ 227   3                                      SaveAct(UartRxBuffer[4],UartRxBuffer[5],UartRxBuffer[6],UartRxBuffer + 7);
+ 228   3                                      McuToPCSendData(CMD_ACTION_DOWNLOAD,0,0);
+ 229   3                                      break;
+ 230   3      
+ 231   3                      }
+ 232   2              }
+ 233   1      }
+ 234          //                      case openmv_1:  
+ 235          //                              FullActRun(1,1);
+ 236          //                              break;
+ 237          //                      case openmv_2:
+ 238          //                              FullActRun(2,1);
+ 239          //                              break;
+ 240          //                      case openmv_3:
+C51 COMPILER V9.02   PCMSG                                                                 07/22/2021 11:52:35 PAGE 5   
+
+ 241          //                              FullActRun(3,1);
+ 242          //                              break;
+ 243          //                      case openmv_4:
+ 244          //                              FullActRun(4,1);
+ 245          //                              break;
+ 246          //                      case openmv_5:
+ 247          //                              FullActRun(5,1);
+ 248          //                              break;
+ 249          //                      case openmv_6:
+ 250          //                              FullActRun(6,1);
+ 251          //                              break;
+ 252          void SaveAct(uint8 fullActNum,uint8 frameIndexSum,uint8 frameIndex,uint8* pBuffer)
+ 253          {
+ 254   1              uint8 i;
+ 255   1              
+ 256   1              if(frameIndex == 0)//下载之前先把这个动作组擦除
+ 257   1              {//一个动作组占16k大小，擦除一个扇区是4k，所以要擦4次
+ 258   2                      for(i = 0;i < 4;i++)//ACT_SUB_FRAME_SIZE/4096 = 4
+ 259   2                      {
+ 260   3                              FlashEraseSector((MEM_ACT_FULL_BASE) + (fullActNum * ACT_FULL_SIZE) + (i * 4096));
+ 261   3                      }
+ 262   2              }
+ 263   1      
+ 264   1              FlashWrite((MEM_ACT_FULL_BASE) + (fullActNum * ACT_FULL_SIZE) + (frameIndex * ACT_SUB_FRAME_SIZE)
+ 265   1                      ,ACT_SUB_FRAME_SIZE,pBuffer);
+ 266   1              
+ 267   1              if((frameIndex + 1) ==  frameIndexSum)
+ 268   1              {
+ 269   2                      FlashRead(MEM_FRAME_INDEX_SUM_BASE,256,frameIndexSumSum);
+ 270   2                      frameIndexSumSum[fullActNum] = frameIndexSum;
+ 271   2                      FlashEraseSector(MEM_FRAME_INDEX_SUM_BASE);
+ 272   2                      FlashWrite(MEM_FRAME_INDEX_SUM_BASE,256,frameIndexSumSum);
+ 273   2              }
+ 274   1      }
+ 275          
+ 276          
+ 277          void FlashEraseAll()
+ 278          {//将所有255个动作组的动作数设置为0，即代表将所有动作组擦除
+ 279   1              uint16 i;
+ 280   1              
+ 281   1              for(i = 0;i <= 255;i++)
+ 282   1              {
+ 283   2                      frameIndexSumSum[i] = 0;
+ 284   2              }
+ 285   1              FlashEraseSector(MEM_FRAME_INDEX_SUM_BASE);
+ 286   1              FlashWrite(MEM_FRAME_INDEX_SUM_BASE,256,frameIndexSumSum);
+ 287   1      }
+ 288          
+ 289          void InitMemory(void)
+ 290          {
+ 291   1              uint8 i;
+ 292   1              uint8 code logo[] = "LOBOT";
+ 293   1              uint8 datatemp[8];
+ 294   1      
+ 295   1              FlashRead(MEM_LOBOT_LOGO_BASE,5,datatemp);
+ 296   1              for(i = 0; i < 5; i++)
+ 297   1              {
+ 298   2                      if(logo[i] != datatemp[i])
+ 299   2                      {
+ 300   3                              //如果发现不相等的，则说明是新FLASH，需要初始化
+ 301   3                              FlashEraseSector(MEM_LOBOT_LOGO_BASE);
+ 302   3                              FlashWrite(MEM_LOBOT_LOGO_BASE,5,logo);
+C51 COMPILER V9.02   PCMSG                                                                 07/22/2021 11:52:35 PAGE 6   
+
+ 303   3                              FlashEraseAll();
+ 304   3                              break;
+ 305   3                      }
+ 306   2              }
+ 307   1              
+ 308   1      }
+ 309          uint16 UART1ModbusCRC(uint8 *ptr,uint16 ucLen)//CRC校验
+ 310          {
+ 311   1              uint8 i;
+ 312   1              uint16 j,crc=0xffff;
+ 313   1              int32 n;
+ 314   1              int32 k;
+ 315   1              
+ 316   1              i=i;    
+ 317   1              
+ 318   1              for( n=0; n<ucLen;n++)
+ 319   1              {
+ 320   2                      crc=ptr[n]^crc;
+ 321   2                      for( k=0;k<8;k++)
+ 322   2                      if(crc&0x01)
+ 323   2                      {
+ 324   3                              crc=crc>>1;
+ 325   3                              crc=crc^0xa001;
+ 326   3                      }
+ 327   2                      else
+ 328   2                      {
+ 329   3                              crc=crc>>1;     
+ 330   3                      }               
+ 331   2              }
+ 332   1      
+ 333   1              j=crc>>8;
+ 334   1              j=j|(crc<<8);
+ 335   1              return j;
+ 336   1      
+ 337   1      }
+ 338          int16 getdata1(void)
+ 339          {
+ 340   1              //uint8 dat[7];
+ 341   1              unsigned int uiData;
+ 342   1              UART1SendDataPacket(CMD_1,8);
+ 343   1              DelayMs(100);
+ 344   1              uiData=ucRxData[3]<<8|ucRxData[4];              
+ 345   1              ucRxFinish=0;
+ 346   1          return uiData;      
+ 347   1      }
+ 348          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1517    ----
+   CONSTANT SIZE    =      6    ----
+   XDATA SIZE       =    890      53
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      3    ----
+   EDATA SIZE       =   ----    ----
+   HDATA SIZE       =   ----    ----
+   XDATA CONST SIZE =   ----    ----
+   FAR CONST SIZE   =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
