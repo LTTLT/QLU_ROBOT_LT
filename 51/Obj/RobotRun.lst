@@ -1,4 +1,4 @@
-C51 COMPILER V9.02   ROBOTRUN                                                              07/22/2021 22:22:02 PAGE 1   
+C51 COMPILER V9.02   ROBOTRUN                                                              07/24/2021 17:22:18 PAGE 1   
 
 
 C51 COMPILER V9.02, COMPILATION OF MODULE ROBOTRUN
@@ -62,7 +62,7 @@ line level    source
   52          void FullActStop(void)
   53          {
   54   1              fRobotRun = FALSE;
-C51 COMPILER V9.02   ROBOTRUN                                                              07/22/2021 22:22:02 PAGE 2   
+C51 COMPILER V9.02   ROBOTRUN                                                              07/24/2021 17:22:18 PAGE 2   
 
   55   1              ActFullRunTimes = 0;
   56   1      
@@ -126,50 +126,105 @@ line level    source
  114   4                                      {//已运行完该动作组最后一个动作
  115   5                                              FrameIndex = 0;
  116   5                                              if(ActFullRunTimesSum != 0)
-C51 COMPILER V9.02   ROBOTRUN                                                              07/22/2021 22:22:02 PAGE 3   
+C51 COMPILER V9.02   ROBOTRUN                                                              07/24/2021 17:22:18 PAGE 3   
 
  117   5                                              {//如果运行次数等于0，即代表无限次运行，就不进入if语句，就一直运行了
  118   6                                                      if(++ActFullRunTimes >= ActFullRunTimesSum)
  119   6                                                      {//到达运行次数，运行停止
  120   7                                                              fRobotRun = FALSE;
- 121   7                                                      
- 122   7                                                      }
- 123   6                                              }
- 124   5                                      }
- 125   4                              }
- 126   3                      }
- 127   2              }
- 128   1              else
- 129   1              {
- 130   2                      FrameIndex = 0;
- 131   2                      
- 132   2                      ActFullRunTimes = 0;
- 133   2      
- 134   2                      fFrameRunFinish = TRUE;
- 135   2      
- 136   2                      TimeActionRunTotal = gSystemTickCount;
- 137   2                      //只需要在运行完整动作组的最开始赋一下初值就可以，避免累积误差
- 138   2              }
- 139   1      }
- 140          void clear(void)
- 141          {
- 142   1                              FrameIndex = 0;
- 143   1                      
- 144   1                      ActFullRunTimes = 0;
- 145   1      
- 146   1                      fFrameRunFinish = TRUE;
- 147   1      
- 148   1                      TimeActionRunTotal = gSystemTickCount;
- 149   1      
- 150   1      }
- 151          
- 152          
+ 121   7                                                              if(ActFullNum == 100)
+ 122   7                                                              {
+ 123   8                                                                      FullActRun(101,1);
+ 124   8                                                              }
+ 125   7                                                              else if (ActFullNum == 101)
+ 126   7                                                              {
+ 127   8                                                                      FullActRun(102,1);
+ 128   8                                                              }
+ 129   7                                                              else if (ActFullNum == 102)
+ 130   7                                                              {
+ 131   8                                                                      FullActRun(103,1);
+ 132   8                                                              }
+ 133   7                                                              else if (ActFullNum == 103)
+ 134   7                                                              {
+ 135   8                                                                      FullActRun(104,1);
+ 136   8                                                              }
+ 137   7                                                              else if (ActFullNum == 104)
+ 138   7                                                              {
+ 139   8                                                                      FullActRun(105,1);
+ 140   8                                                              }
+ 141   7                                                              else if (ActFullNum == 105)
+ 142   7                                                              {
+ 143   8                                                                      FullActRun(106,1);
+ 144   8                                                              }
+ 145   7                                                              else if (ActFullNum == 106)
+ 146   7                                                              {
+ 147   8                                                                      FullActRun(107,1);
+ 148   8                                                              }
+ 149   7                                                              else if (ActFullNum == 107)
+ 150   7                                                              {
+ 151   8                                                                      FullActRun(108,1);
+ 152   8                                                              }
+ 153   7                                                              else if (ActFullNum == 108)
+ 154   7                                                              {
+ 155   8                                                                      FullActRun(109,1);
+ 156   8                                                              }
+ 157   7                                                              else if (ActFullNum == 109)
+ 158   7                                                              {
+ 159   8                                                                      FullActRun(110,1);
+ 160   8                                                              }
+ 161   7                                                      }
+ 162   6                                              }
+ 163   5                                      }
+ 164   4                              }
+ 165   3                      }
+ 166   2              }
+ 167   1              else
+ 168   1              {
+ 169   2                      FrameIndex = 0;
+ 170   2                      
+ 171   2                      ActFullRunTimes = 0;
+ 172   2      
+ 173   2                      fFrameRunFinish = TRUE;
+ 174   2      
+ 175   2                      TimeActionRunTotal = gSystemTickCount;
+ 176   2                      //只需要在运行完整动作组的最开始赋一下初值就可以，避免累积误差
+ 177   2              }
+ 178   1      }
+C51 COMPILER V9.02   ROBOTRUN                                                              07/24/2021 17:22:18 PAGE 4   
+
+ 179          void clear(void)
+ 180          {
+ 181   1                              FrameIndex = 0;
+ 182   1                      
+ 183   1                      ActFullRunTimes = 0;
+ 184   1      
+ 185   1                      fFrameRunFinish = TRUE;
+ 186   1      
+ 187   1                      TimeActionRunTotal = gSystemTickCount;
+ 188   1      
+ 189   1      }
+ 190          uint8 flag1;
+ 191          uint8 flag2;
+ 192          void danceprogram(void)
+ 193          {
+ 194   1      if(ActFullNum == 1 )
+ 195   1      {
+ 196   2              FullActRun(1,1);
+ 197   2      
+ 198   2      }
+ 199   1      if(ActFullNum == 2)
+ 200   1      {
+ 201   2              FullActRun(2,1);
+ 202   2      }
+ 203   1      
+ 204   1      }
+ 205          
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    871    ----
+   CODE SIZE        =   1136    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =     15      83
+   XDATA SIZE       =     17      83
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

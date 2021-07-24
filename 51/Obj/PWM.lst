@@ -1,4 +1,4 @@
-C51 COMPILER V9.02   PWM                                                                   07/22/2021 04:22:26 PAGE 1   
+C51 COMPILER V9.02   PWM                                                                   07/24/2021 16:55:38 PAGE 1   
 
 
 C51 COMPILER V9.02, COMPILATION OF MODULE PWM
@@ -62,7 +62,7 @@ line level    source
   52   5                                              
   53   5                                      }
   54   4                                      ServoPwmDutyInc[i] /= ServoPwmDutyIncTimes;//每次递增的脉宽
-C51 COMPILER V9.02   PWM                                                                   07/22/2021 04:22:26 PAGE 2   
+C51 COMPILER V9.02   PWM                                                                   07/24/2021 16:55:38 PAGE 2   
 
   55   4                              }
   56   3                      }
@@ -126,7 +126,7 @@ line level    source
  114   1              TL0=value;                      //16位数据给8位数据赋值默认将16位数据的低八位直接赋给八位数据
  115   1          TH0=value>>8;               //将16位数据右移8位，也就是将高8位移到低八位，再赋值给8位数据
  116   1          TR0 = 1;                    //定时器0开始计时
-C51 COMPILER V9.02   PWM                                                                   07/22/2021 04:22:26 PAGE 3   
+C51 COMPILER V9.02   PWM                                                                   07/24/2021 16:55:38 PAGE 3   
 
  117   1      }
  118          
@@ -190,7 +190,7 @@ line level    source
  176   2                              SERVO5 = 0;     //PWM控制脚低电平
  177   2                              Timer0Value(2500-ServoPwmDuty[5]);      
  178   2                              break;
-C51 COMPILER V9.02   PWM                                                                   07/22/2021 04:22:26 PAGE 4   
+C51 COMPILER V9.02   PWM                                                                   07/24/2021 16:55:38 PAGE 4   
 
  179   2                      case 13:
  180   2                              SERVO6 = 1;     

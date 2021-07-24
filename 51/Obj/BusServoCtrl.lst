@@ -1,4 +1,4 @@
-C51 COMPILER V9.02   BUSSERVOCTRL                                                          07/22/2021 04:22:27 PAGE 1   
+C51 COMPILER V9.02   BUSSERVOCTRL                                                          07/24/2021 16:55:38 PAGE 1   
 
 
 C51 COMPILER V9.02, COMPILATION OF MODULE BUSSERVOCTRL
@@ -62,7 +62,7 @@ line level    source
   52          void Uart4() interrupt 18 using 1
   53          {
   54   1              uint8 rxBuf;
-C51 COMPILER V9.02   BUSSERVOCTRL                                                          07/22/2021 04:22:27 PAGE 2   
+C51 COMPILER V9.02   BUSSERVOCTRL                                                          07/24/2021 16:55:38 PAGE 2   
 
   55   1              
   56   1          if (S4CON & S4RI)

@@ -53,7 +53,7 @@ void Uart2SendDataPacket(UINT8 dat[],uint8 len)
  static unsigned char ucCnt=0,ucLen=0;
  static unsigned char ucRxData[100];
 /***********************************************************
-* 名    称： void Uart4() interrupt 18 using 1
+* 名    称： void Uart2() interrupt 18 using 1
 * 功    能： 
 * 入口参数：  
 * 出口参数：
@@ -62,14 +62,19 @@ void Uart2SendDataPacket(UINT8 dat[],uint8 len)
 void Uart2() interrupt 8 using 1
 {
 	uint8 temp;
-	 u16 C=0;
+	u16 C=0;
+	static uint8 startCodeSum = 0;
+	static bool fFrameStart = FALSE;
+	static uint8 messageLength = 0;
+	static uint8 messageLengthSum = 2;
 //	static uint8 messageLengthSum = 2;
 	
 	if (S2CON & S2RI)		//串口2收到数据请求中断
     {
         S2CON &= ~S2RI;     //Clear receive interrupt flag
 		temp = S2BUF; 		//赋值串口2数据
-				if(ucCnt==0)
+		 //下面是识别测距模块的
+		if(ucCnt==0)
 					ucRxData[ucCnt++]=temp ;//ucRxData[0]
 		  else	if((ucCnt==1)&(temp==0x03))//
 					ucRxData[ucCnt++]=temp;//ucRxData[1]
@@ -84,8 +89,50 @@ void Uart2() interrupt 8 using 1
 				if(C==((ucRxData[ucLen+3]<<8)|ucRxData[ucLen+4]))//
 					{ucRxFinish1=1;	ucCnt=0;ucLen=0;}			
 				else 
-					{ucCnt=0;ucLen=0;}				
+					{ucCnt=0;ucLen=0;}						
 			}
+
+
+	//上面是踩圈获取距离数据的，下面是获取语音模块数据的
+	if(!fFrameStart)
+		{
+			if(temp == 0x55)
+			{
+				startCodeSum++;
+				if(startCodeSum == 2)
+				{
+					startCodeSum = 0;
+					fFrameStart = TRUE;
+					messageLength = 1;
+				}
+			}
+			else
+			{
+				fFrameStart = FALSE;
+				messageLength = 0;	
+				startCodeSum = 0;
+			}			
+		}
+		if(fFrameStart)
+		{
+			UartRxBuffer[messageLength] = temp;
+			if(messageLength == 2)
+			{
+				messageLengthSum = UartRxBuffer[messageLength];
+				if(messageLengthSum < 2)// || messageLengthSum > 30
+				{
+					messageLengthSum = 2;
+					fFrameStart = FALSE;					
+				}
+					
+			}
+			messageLength++;	
+			if(messageLength == messageLengthSum + 2) 
+			{
+				fUartRxComplete = TRUE;
+				fFrameStart = FALSE;
+			}
+		}
     }
 
     if (S2CON & S2TI)
@@ -93,8 +140,7 @@ void Uart2() interrupt 8 using 1
         S2CON &= ~S2TI;     //Clear transmit interrupt flag
         Uart2Busy = FALSE;           //Clear transmit busy flag
     }
-}
-
+ }
 
 static bool UartRxOK(void)
 {
@@ -110,6 +156,7 @@ static bool UartRxOK(void)
 }
 void TaskBLEMsgHandle(void)
 {
+	uint8 cmd;
 	uint8 length;
 	//McuToPCSendData(CMD_ACTION_DOWNLOAD,data1,data2);
 	if(UartRxOK())
@@ -117,6 +164,28 @@ void TaskBLEMsgHandle(void)
 		LED = !LED;
 		length = ((UartRxBuffer[1]<<8)|UartRxBuffer[2]);
  		}
+		switch(cmd)
+ 		{
+ 			case 0x0a:			  //你好
+				
+ 				break;
+			
+			case 0x0c:			  //谢谢
+				
+				break;
+				
+			case 0x0d:			   //鞠躬
+				
+				break;
+			case 0x0e:			   //再见
+				
+				break;
+			case 0x0f:			   //开始舞蹈
+				
+				break;
+				
+
+		}
 }
 
 uint16 ModbusCRC(uint8 *ptr,uint16 ucLen)//CRC校验

@@ -228,27 +228,34 @@ void TaskPCMsgHandle(void)
 				McuToPCSendData(CMD_ACTION_DOWNLOAD,0,0);
 				break;
 
+			case openmv_1:	
+				FullActRun(1,1);
+				break;
+
+			case openmv_2:
+				FullActRun(2,1);
+				break;
+
+			case openmv_3:
+				FullActRun(3,1);
+				break;
+
+			case openmv_4:
+				FullActRun(4,1);
+				break;
+
+			case openmv_5:
+				FullActRun(5,1);
+				break;
+
+			case openmv_6:
+				FullActRun(6,1);
+				break;
+
  		}
 	}
 }
-//			case openmv_1:	
-//				FullActRun(1,1);
-//				break;
-//			case openmv_2:
-//				FullActRun(2,1);
-//				break;
-//			case openmv_3:
-//				FullActRun(3,1);
-//				break;
-//			case openmv_4:
-//				FullActRun(4,1);
-//				break;
-//			case openmv_5:
-//				FullActRun(5,1);
-//				break;
-//			case openmv_6:
-//				FullActRun(6,1);
-//				break;
+
 void SaveAct(uint8 fullActNum,uint8 frameIndexSum,uint8 frameIndex,uint8* pBuffer)
 {
 	uint8 i;

@@ -1,4 +1,4 @@
-C51 COMPILER V9.02   PS2GAMEPAD                                                            07/22/2021 04:22:26 PAGE 1   
+C51 COMPILER V9.02   PS2GAMEPAD                                                            07/24/2021 16:55:38 PAGE 1   
 
 
 C51 COMPILER V9.02, COMPILATION OF MODULE PS2GAMEPAD
@@ -62,7 +62,7 @@ line level    source
   52   1              Data[1] = 0;
   53   1              for(ref=0x01;ref<0x0100;ref<<=1)
   54   1              {
-C51 COMPILER V9.02   PS2GAMEPAD                                                            07/22/2021 04:22:26 PAGE 2   
+C51 COMPILER V9.02   PS2GAMEPAD                                                            07/24/2021 16:55:38 PAGE 2   
 
   55   2                      if(ref&CMD)
   56   2                      {
@@ -126,7 +126,7 @@ line level    source
  114          //按下为0， 未按下为1
  115          u8 PS2_DataKey()
  116          {
-C51 COMPILER V9.02   PS2GAMEPAD                                                            07/22/2021 04:22:26 PAGE 3   
+C51 COMPILER V9.02   PS2GAMEPAD                                                            07/24/2021 16:55:38 PAGE 3   
 
  117   1              u8 index;
  118   1        Lastkey = Handkey;
@@ -190,7 +190,7 @@ line level    source
  169          {
  170   1              CS_L;
  171   1              Delay(50);
-C51 COMPILER V9.02   PS2GAMEPAD                                                            07/22/2021 04:22:26 PAGE 4   
+C51 COMPILER V9.02   PS2GAMEPAD                                                            07/24/2021 16:55:38 PAGE 4   
 
  172   1          PS2_Cmd(0x01);  //开始命令
  173   1              PS2_Cmd(0x42);  //请求数据
@@ -254,7 +254,7 @@ line level    source
  231   1      }
  232          //振动设置
  233          void PS2_VibrationMode(void)
-C51 COMPILER V9.02   PS2GAMEPAD                                                            07/22/2021 04:22:26 PAGE 5   
+C51 COMPILER V9.02   PS2GAMEPAD                                                            07/24/2021 16:55:38 PAGE 5   
 
  234          {
  235   1              CS_L;

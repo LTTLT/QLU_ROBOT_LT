@@ -174,7 +174,7 @@ void TaskTimeHandle(void)
 	}
 	
 }
-
+uint8 zero_flag;
 void TaskRun(void)
 {
 
@@ -186,7 +186,6 @@ void TaskRun(void)
 	TaskPCMsgHandle();
 	TaskBLEMsgHandle();
 	TaskRobotRun();
-
 	if(KEY == 0)
 	{
 		DelayMs(60);
@@ -199,13 +198,9 @@ void TaskRun(void)
 			{
 				if (keycount > 20)
 				{
-//					keycount = 0;
-//					DelayMs(5000);
-////					clear();
-					FullActRun(1,1);
-					DelayMs(5000);
-					FullActRun(0,1);
-					McuToPCSendData(CMD_FULL_ACTION_ERASE,0,0);
+					keycount = 0;
+
+					FullActRun(100,1);
 //					distance1 = getdata();
 //				   	distance2 = getdata1();
 //					if(distance2<200&&distance1<200) LED = ~LED;			
@@ -215,10 +210,7 @@ void TaskRun(void)
 				{
 					keycount = 0;
 					LED = ~LED;
-					FullActRun(1,1);
-					DelayMs(5000);
-					FullActRun(0,1);
-					McuToPCSendData(CMD_FULL_ACTION_ERASE,0,0);
+					FullActRun(100,1);
 //					distance1 =getdata();
 //					distance2 = getdata1();
 //					if(distance2<200&&distance1<200) LED = ~LED;

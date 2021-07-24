@@ -1,4 +1,4 @@
-C51 COMPILER V9.02   APP                                                                   07/22/2021 22:23:47 PAGE 1   
+C51 COMPILER V9.02   APP                                                                   07/24/2021 17:28:16 PAGE 1   
 
 
 C51 COMPILER V9.02, COMPILATION OF MODULE APP
@@ -62,7 +62,7 @@ line level    source
   52   1              ad = (ad << 2) + (ADC_RESL & 0x03);
   53   1              return ad;
   54   1      }
-C51 COMPILER V9.02   APP                                                                   07/22/2021 22:23:47 PAGE 2   
+C51 COMPILER V9.02   APP                                                                   07/24/2021 17:28:16 PAGE 2   
 
   55          
   56          
@@ -126,7 +126,7 @@ line level    source
  114   1              {
  115   2                      t2++;
  116   2                      if(t2 < 5000)
-C51 COMPILER V9.02   APP                                                                   07/22/2021 22:23:47 PAGE 3   
+C51 COMPILER V9.02   APP                                                                   07/24/2021 17:28:16 PAGE 3   
 
  117   2                      {
  118   3                              fBuzzer = TRUE;
@@ -188,9 +188,9 @@ line level    source
  174   2              }
  175   1              
  176   1      }
- 177          
+ 177          uint8 zero_flag;
  178          void TaskRun(void)
-C51 COMPILER V9.02   APP                                                                   07/22/2021 22:23:47 PAGE 4   
+C51 COMPILER V9.02   APP                                                                   07/24/2021 17:28:16 PAGE 4   
 
  179          {
  180   1      
@@ -202,60 +202,50 @@ line level    source
  186   1              TaskPCMsgHandle();
  187   1              TaskBLEMsgHandle();
  188   1              TaskRobotRun();
- 189   1      
- 190   1              if(KEY == 0)
- 191   1              {
- 192   2                      DelayMs(60);
- 193   2                      {
- 194   3                              if(KEY == 0)
- 195   3                              {
- 196   4                                      keycount++;
- 197   4                              }
- 198   3                              else
- 199   3                              {
- 200   4                                      if (keycount > 20)
- 201   4                                      {
- 202   5      //                                      keycount = 0;
- 203   5      //                                      DelayMs(5000);
- 204   5      ////                                    clear();
- 205   5                                              FullActRun(1,1);
- 206   5                                              DelayMs(5000);
- 207   5                                              FullActRun(0,1);
- 208   5                                              McuToPCSendData(CMD_FULL_ACTION_ERASE,0,0);
- 209   5      //                                      distance1 = getdata();
- 210   5      //                                      distance2 = getdata1();
- 211   5      //                                      if(distance2<200&&distance1<200) LED = ~LED;                    
- 212   5                                              return;
- 213   5                                      }
- 214   4                                      else
- 215   4                                      {
- 216   5                                              keycount = 0;
- 217   5                                              LED = ~LED;
- 218   5                                              FullActRun(1,1);
- 219   5                                              DelayMs(5000);
- 220   5                                              FullActRun(0,1);
- 221   5                                              McuToPCSendData(CMD_FULL_ACTION_ERASE,0,0);
- 222   5      //                                      distance1 =getdata();
- 223   5      //                                      distance2 = getdata1();
- 224   5      //                                      if(distance2<200&&distance1<200) LED = ~LED;
- 225   5                                      }
- 226   4                              }
- 227   3                      }
- 228   2              }
- 229   1      }
+ 189   1              if(KEY == 0)
+ 190   1              {
+ 191   2                      DelayMs(60);
+ 192   2                      {
+ 193   3                              if(KEY == 0)
+ 194   3                              {
+ 195   4                                      keycount++;
+ 196   4                              }
+ 197   3                              else
+ 198   3                              {
+ 199   4                                      if (keycount > 20)
+ 200   4                                      {
+ 201   5                                              keycount = 0;
+ 202   5      
+ 203   5                                              FullActRun(100,1);
+ 204   5      //                                      distance1 = getdata();
+ 205   5      //                                      distance2 = getdata1();
+ 206   5      //                                      if(distance2<200&&distance1<200) LED = ~LED;                    
+ 207   5                                              return;
+ 208   5                                      }
+ 209   4                                      else
+ 210   4                                      {
+ 211   5                                              keycount = 0;
+ 212   5                                              LED = ~LED;
+ 213   5                                              FullActRun(100,1);
+ 214   5      //                                      distance1 =getdata();
+ 215   5      //                                      distance2 = getdata1();
+ 216   5      //                                      if(distance2<200&&distance1<200) LED = ~LED;
+ 217   5                                      }
+ 218   4                              }
+ 219   3                      }
+ 220   2              }
+ 221   1      }
 *** WARNING C280 IN LINE 182 OF APP.C: 'distance1': unreferenced local variable
 *** WARNING C280 IN LINE 183 OF APP.C: 'distance2': unreferenced local variable
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    834    ----
+   CODE SIZE        =    806    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =     31       9
+   XDATA SIZE       =     32       9
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
-C51 COMPILER V9.02   APP                                                                   07/22/2021 22:23:47 PAGE 5   
-
    BIT SIZE         =      3    ----
    EDATA SIZE       =   ----    ----
    HDATA SIZE       =   ----    ----

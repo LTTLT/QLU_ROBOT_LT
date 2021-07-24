@@ -118,7 +118,46 @@ void TaskRobotRun(void)
 						if(++ActFullRunTimes >= ActFullRunTimesSum)
 						{//到达运行次数，运行停止
 							fRobotRun = FALSE;
-						
+						  	if(ActFullNum == 100)
+							{
+								FullActRun(101,1);
+							}
+							else if (ActFullNum == 101)
+							{
+								FullActRun(102,1);
+							}
+							else if (ActFullNum == 102)
+							{
+								FullActRun(103,1);
+							}
+							else if (ActFullNum == 103)
+							{
+								FullActRun(104,1);
+							}
+							else if (ActFullNum == 104)
+							{
+								FullActRun(105,1);
+							}
+							else if (ActFullNum == 105)
+							{
+								FullActRun(106,1);
+							}
+							else if (ActFullNum == 106)
+							{
+								FullActRun(107,1);
+							}
+							else if (ActFullNum == 107)
+							{
+								FullActRun(108,1);
+							}
+							else if (ActFullNum == 108)
+							{
+								FullActRun(109,1);
+							}
+							else if (ActFullNum == 109)
+							{
+								FullActRun(110,1);
+							}
 						}
 					}
 				}
@@ -148,5 +187,19 @@ void clear(void)
 		TimeActionRunTotal = gSystemTickCount;
 
 }
+uint8 flag1;
+uint8 flag2;
+void danceprogram(void)
+{
+if(ActFullNum == 1 )
+{
+	FullActRun(1,1);
 
+}
+if(ActFullNum == 2)
+{
+	FullActRun(2,1);
+}
+
+}
 

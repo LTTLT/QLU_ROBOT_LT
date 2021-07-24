@@ -22,7 +22,7 @@ void InitTimer3(void);
 void InitUart2(void);
 void Uart1SendData(BYTE dat);
 uint16 GetBatteryVoltage(void);
-
+extern uint8 zero_flag;
 
 void TaskRun(void);
 
